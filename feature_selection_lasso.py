@@ -61,3 +61,10 @@ f1 = f1_score(y_test, y_pred, average='macro')
 print("\nModel Performance:")
 print("Accuracy:", accuracy)
 print("Macro F1:", f1)
+
+#Results
+#max_iter reached after 577 seconds
+#Selected features: 8413
+#Model Performance:
+#Accuracy: 0.89375
+#Macro F1: 0.8778980162280018
