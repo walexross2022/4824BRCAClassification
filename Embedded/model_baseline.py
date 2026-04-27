@@ -1,4 +1,4 @@
-from app import X, y
+from Embedded.app import X, y
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler

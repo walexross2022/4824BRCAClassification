@@ -3,7 +3,7 @@
 import warnings
 warnings.filterwarnings("ignore")
 
-from app import X, y
+from Embedded.app import X, y
 
 import numpy as np
 import time
