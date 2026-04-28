@@ -1,0 +1,35 @@
+=== BRCA Baseline Logistic Regression ===
+
+Accuracy:      0.8116
+Macro F1:      0.7300
+Weighted F1:   0.8030
+
+Classification Report:
+              precision    recall  f1-score   support
+
+  BRCA.Basal       0.90      0.95      0.92        56
+   BRCA.Her2       0.77      0.83      0.80        24
+   BRCA.LumA       0.83      0.90      0.87       167
+   BRCA.LumB       0.73      0.58      0.65        62
+ BRCA.Normal       0.50      0.35      0.41        20
+
+    accuracy                           0.81       329
+   macro avg       0.75      0.72      0.73       329
+weighted avg       0.80      0.81      0.80       329
+
+
+Class distribution (train):
+Subtype_Selected
+BRCA.LumA      388
+BRCA.LumB      146
+BRCA.Basal     129
+BRCA.Her2       55
+BRCA.Normal     48
+
+Class distribution (test):
+Subtype_Selected
+BRCA.LumA      167
+BRCA.LumB       62
+BRCA.Basal      56
+BRCA.Her2       24
+BRCA.Normal     20
