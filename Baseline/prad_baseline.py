@@ -12,8 +12,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
 
-OUT_DIR = "H:/MLFinalProj/4824BRCAClassification/Baseline/results"
-import os
+# Configuration
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT_DIR = os.path.join(BASE_DIR, "Baseline", "results")
+DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 CANCER = "PRAD"
@@ -21,15 +23,12 @@ PREFIX = "prad"
 RANDOM_STATE = 42
 
 print(f"[{CANCER}] Loading expression matrix...")
-expr = pd.read_csv(
-    f"H:/MLFinalProj/4824BRCAClassification/data/TCGA-{CANCER}/{PREFIX}_expression_matrix.csv",
-    index_col=0
-)
+expr_path = os.path.join(DATA_DIR, f"TCGA-{CANCER}", f"{PREFIX}_expression_matrix.csv")
+expr = pd.read_csv(expr_path, index_col=0)
 print(f"  Expression shape: {expr.shape}")
 
-sub = pd.read_csv(
-    f"H:/MLFinalProj/4824BRCAClassification/data/TCGA-{CANCER}/{PREFIX}_subtypes.csv"
-)
+sub_path = os.path.join(DATA_DIR, f"TCGA-{CANCER}", f"{PREFIX}_subtypes.csv")
+sub = pd.read_csv(sub_path)
 sub.columns = sub.columns.str.strip()
 sub = sub[["pan.samplesID", "Subtype_Selected"]].dropna()
 sub["sample_id"] = sub["pan.samplesID"].str[:12]
