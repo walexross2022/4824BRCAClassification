@@ -1,22 +1,34 @@
-# Embedded Feature Selection (LASSO)
+# Embedded Feature Selection (LASSO & Random Forest)
 
-This directory implements feature selection using the **LASSO (L1 regularization)** method.
+This directory implements embedded feature selection methods following the **Professor's Example Workflow**.
 
-## Concept
-Embedded methods perform feature selection during the model training process. LASSO adds a penalty proportional to the absolute value of the coefficients, which forces some coefficients to exactly zero, effectively selecting a subset of features.
+## Workflow Standards
+To ensure rigorous benchmarking, both methods adhere to the following steps:
+1.  **Data Partitioning:** 80% Training / 20% Test (Stratified).
+2.  **Normalization:** `StandardScaler` fitted on training data only.
+3.  **Hyperparameter Tuning:** K-fold Cross-Validation on the training set.
+4.  **Metrics:** Accuracy, Macro F1-score, Weighted ROC-AUC, Precision, and Recall.
 
-## Implementation
-- **Algorithm:** Logistic Regression with `penalty='l1'` and `solver='liblinear'`.
-- **Hyperparameter:** Regularization strength `C=0.1` (lower C means stronger regularization/fewer features).
-- **Automation:** `run_lasso.py` automatically processes all three datasets (BRCA, COAD, PRAD).
+## Methods
+
+### 1. LASSO (L1 Regularization)
+- **Script:** `run_lasso.py`
+- **Logic:** Uses `LogisticRegressionCV` to find the optimal regularization strength `C` while performing feature selection (forcing irrelevant coefficients to zero).
+- **Selection:** Features with non-zero coefficients.
+
+### 2. Random Forest (Importance Ranking)
+- **Script:** `run_rf.py`
+- **Logic:** Uses `GridSearchCV` to tune `n_estimators` and `max_depth`.
+- **Selection:** Features with `feature_importances_` greater than the mean importance across all features.
 
 ## Files
-- `run_lasso.py`: Main execution script that iterates through datasets and saves results.
-- `feature_selection_lasso.py`: (Internal) Logic for LASSO selection.
-- `model_baseline.py`: (Internal) Reusable model components.
+- `data_utils.py`: Shared utility for standardized TCGA data loading and alignment.
+- `run_lasso.py`: Execution script for LASSO benchmarking.
+- `run_rf.py`: Execution script for Random Forest benchmarking.
+- `archive/`: Legacy scripts moved for project cleanliness.
 
 ## Results
-Results are saved in `Embedded/results/LASSO/`:
-- `*_lasso_results.txt`: Performance metrics and a list of selected features.
-- `lasso_summary.csv`: Aggregated results for all datasets.
-- Visualizations for each dataset.
+Results are saved in `Embedded/results/`:
+- `LASSO/`: Reports and confusion matrices for LASSO runs.
+- `RandomForest/`: Reports and confusion matrices for RF runs.
+- `summary_metrics.csv`: Aggregated performance metrics for all datasets.
