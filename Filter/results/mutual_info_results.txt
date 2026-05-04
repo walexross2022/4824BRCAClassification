@@ -1,0 +1,21 @@
+=== BRCA Mutual Information Filter ===
+
+Top K:         5000
+Accuracy:      0.8055
+Macro F1:      0.7300
+Weighted F1:   0.7950
+Runtime (s):   240.58
+
+Classification Report:
+              precision    recall  f1-score   support
+
+  BRCA.Basal       0.87      0.95      0.91        56
+   BRCA.Her2       0.84      0.67      0.74        24
+   BRCA.LumA       0.81      0.92      0.86       167
+   BRCA.LumB       0.75      0.53      0.62        62
+ BRCA.Normal       0.60      0.45      0.51        20
+
+    accuracy                           0.81       329
+   macro avg       0.77      0.70      0.73       329
+weighted avg       0.80      0.81      0.80       329
+

@@ -1,0 +1,13 @@
+=== BRCA Variance Threshold Sweep ===
+
+            Method  Threshold  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  Runtime (s)
+Variance Threshold       0.01              60660              44577  0.802432  0.679656     0.784135    15.954100
+Variance Threshold       0.05              60660              37634  0.802432  0.680236     0.786523    13.574947
+Variance Threshold       0.10              60660              34504  0.814590  0.716573     0.802019    12.368069
+Variance Threshold       0.25              60660              30306  0.829787  0.743453     0.818677    10.939233
+Variance Threshold       0.50              60660              27040  0.820669  0.743254     0.812624    10.015812
+Variance Threshold       0.75              60660              25207  0.805471  0.701271     0.791964     9.421538
+
+Best Accuracy Threshold: 0.25
+Best Macro F1 Threshold: 0.25
+Fastest Runtime Threshold: 0.75

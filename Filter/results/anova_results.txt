@@ -1,0 +1,21 @@
+=== BRCA ANOVA / F-test Filter ===
+
+Top K:         5000
+Accuracy:      0.8085
+Macro F1:      0.7310
+Weighted F1:   0.7971
+Runtime (s):   3.25
+
+Classification Report:
+              precision    recall  f1-score   support
+
+  BRCA.Basal       0.87      0.95      0.91        56
+   BRCA.Her2       0.85      0.71      0.77        24
+   BRCA.LumA       0.82      0.93      0.87       167
+   BRCA.LumB       0.70      0.53      0.61        62
+ BRCA.Normal       0.67      0.40      0.50        20
+
+    accuracy                           0.81       329
+   macro avg       0.78      0.70      0.73       329
+weighted avg       0.80      0.81      0.80       329
+
