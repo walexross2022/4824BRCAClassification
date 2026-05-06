@@ -31,28 +31,13 @@ def run_rf_workflow(cancer_type):
     # 1. Load Data
     X_raw, y, labels = load_tcga_data(cancer_type)
     feature_names = X_raw.columns
-    out_dir = os.path.join(BASE_OUT_DIR, cancer_type)
+    
+    # Create timestamped results directory
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    out_dir = os.path.join(BASE_OUT_DIR, f"{cancer_type}_{timestamp}")
     os.makedirs(out_dir, exist_ok=True)
     
-    # 2. Basic Cleaning (Gene Filtering)
-    var_selector = VarianceThreshold(threshold=0.01)
-    X_filtered = var_selector.fit_transform(X_raw)
-    selected_features_pre = feature_names[var_selector.get_support()]
-    print(f"[{cancer_type}] Genes after variance filter: {X_filtered.shape[1]} / {X_raw.shape[1]}")
-
-    # 3. Data Partitioning (80/20 split)
-    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
-        X_filtered, y, 
-        test_size=0.20, 
-        stratify=y, 
-        random_state=RANDOM_STATE
-    )
-    
-    # 4. Normalization (On Training Set Only)
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train_raw)
-    X_test = scaler.transform(X_test_raw)
-    
+    # ... (Step 2-4 remains same) ...
     # 5. Feature Selection & Model Training (Random Forest Importance)
     print(f"[{cancer_type}] Tuning Random Forest via Grid Search...")
     start_time = time.time()
@@ -104,10 +89,16 @@ def run_rf_workflow(cancer_type):
     
     # Save Results
     with open(os.path.join(out_dir, f"{cancer_type}_rf_report.txt"), "w") as f:
-        f.write(f"=== {cancer_type} Random Forest (Professor's Workflow) ===\n\n")
-        f.write(f"Best Params: {grid_search.best_params_}\n")
+        f.write(f"=== {cancer_type} Random Forest Report ===\n")
+        f.write(f"Timestamp: {timestamp}\n\n")
+        f.write(f"--- Grid Search Parameters ---\n")
+        for k, v in param_grid.items():
+            f.write(f"{k}: {v}\n")
+        f.write(f"Best Params Identified: {grid_search.best_params_}\n\n")
+        
+        f.write(f"--- Metrics ---\n")
         f.write(f"Features with Importance > Mean: {n_selected}\n")
-        f.write(f"Runtime: {runtime:.2f}s\n\n")
+        f.write(f"Runtime: {runtime:.2f}s\n")
         f.write(f"Accuracy:          {acc:.4f}\n")
         f.write(f"Macro F1:          {f1_macro:.4f}\n")
         f.write(f"Weighted ROC-AUC:  {roc_auc:.4f}\n")

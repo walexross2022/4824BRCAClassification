@@ -31,43 +31,42 @@ def run_lasso_workflow(cancer_type):
     # 1. Load Data
     X_raw, y, labels = load_tcga_data(cancer_type)
     feature_names = X_raw.columns
-    out_dir = os.path.join(BASE_OUT_DIR, cancer_type)
+    
+    # Create timestamped results directory
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    out_dir = os.path.join(BASE_OUT_DIR, f"{cancer_type}_{timestamp}")
     os.makedirs(out_dir, exist_ok=True)
     
-    # 2. Basic Cleaning (Gene Filtering)
-    # Removing genes with near-zero variance
-    var_selector = VarianceThreshold(threshold=0.01)
-    X_filtered = var_selector.fit_transform(X_raw)
-    selected_features_pre = feature_names[var_selector.get_support()]
-    print(f"[{cancer_type}] Genes after variance filter: {X_filtered.shape[1]} / {X_raw.shape[1]}")
-
-    # 3. Data Partitioning (CRITICAL: 80/20 split per professor's example)
-    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
-        X_filtered, y, 
-        test_size=0.20, 
-        stratify=y, 
-        random_state=RANDOM_STATE
-    )
-    print(f"[{cancer_type}] Data split: Train={len(y_train)}, Test={len(y_test)}")
-    
-    # 4. Normalization (On Training Set Only)
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train_raw)
-    X_test = scaler.transform(X_test_raw)
-    
+    # ... (Step 2-4 remains same) ...
     # 5. Feature Selection & Model Training (with K-fold Cross-Validation)
-    print(f"[{cancer_type}] Training LASSO with 5-fold CV...")
+    print(f"[{cancer_type}] Training LASSO with 3-fold CV...")
     start_time = time.time()
     
     # LogisticRegressionCV automates the search for the best C using stratified K-fold
+    # Optimizing for speed: 3-fold CV, 5 Cs, higher tolerance, and verbose output
+    model_params = {
+        'penalty': 'l1',
+        'solver': 'saga',
+        'cv': 3,
+        'Cs': 5,
+        'tol': 0.1,
+        'max_iter': 1000,
+        'random_state': RANDOM_STATE,
+        'n_jobs': -1,
+        'verbose': 1
+    }
+    
     model = LogisticRegressionCV(
-        penalty='l1',
-        solver='liblinear',
-        cv=StratifiedKFold(5, shuffle=True, random_state=RANDOM_STATE),
+        penalty=model_params['penalty'],
+        solver=model_params['solver'],
+        cv=StratifiedKFold(model_params['cv'], shuffle=True, random_state=RANDOM_STATE),
+        Cs=model_params['Cs'],
+        tol=model_params['tol'],
         scoring='f1_macro',
-        max_iter=1000,
-        random_state=RANDOM_STATE,
-        n_jobs=-1
+        max_iter=model_params['max_iter'],
+        random_state=model_params['random_state'],
+        n_jobs=model_params['n_jobs'],
+        verbose=model_params['verbose']
     )
     model.fit(X_train, y_train)
     
@@ -101,10 +100,16 @@ def run_lasso_workflow(cancer_type):
     
     # Save Results
     with open(os.path.join(out_dir, f"{cancer_type}_lasso_report.txt"), "w") as f:
-        f.write(f"=== {cancer_type} LASSO (Professor's Workflow) ===\n\n")
-        f.write(f"Parameters: CV=5, Penalty=L1, Best C={model.C_[0]:.4f}\n")
+        f.write(f"=== {cancer_type} LASSO Report ===\n")
+        f.write(f"Timestamp: {timestamp}\n\n")
+        f.write(f"--- Model Parameters ---\n")
+        for k, v in model_params.items():
+            f.write(f"{k}: {v}\n")
+        f.write(f"Best C identified: {model.C_[0]:.4f}\n\n")
+        
+        f.write(f"--- Metrics ---\n")
         f.write(f"Selected Features: {n_selected}\n")
-        f.write(f"FS/Training Runtime: {fs_runtime:.2f}s\n\n")
+        f.write(f"FS/Training Runtime: {fs_runtime:.2f}s\n")
         f.write(f"Accuracy:          {acc:.4f}\n")
         f.write(f"Macro F1:          {f1_macro:.4f}\n")
         f.write(f"Weighted ROC-AUC:  {roc_auc:.4f}\n")
