@@ -1,0 +1,12 @@
+=== BRCA Select K Best Sweep ===
+
+       Method  Feature Fraction  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  Runtime (s)
+Select K Best              0.01              60660                606  0.781155  0.717898     0.777543     9.220617
+Select K Best              0.05              60660               3033  0.808511  0.728566     0.796418    12.129309
+Select K Best              0.10              60660               6066  0.799392  0.722455     0.790791    14.606901
+Select K Best              0.25              60660              15165  0.823708  0.767003     0.816284    20.566875
+Select K Best              0.50              60660              30330  0.808511  0.715061     0.793528    28.725900
+
+Best Accuracy (n_features): 15165
+Best Macro F1 (n_features): 15165
+Fastest Runtime (n_features): 606
