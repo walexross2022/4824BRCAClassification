@@ -95,3 +95,4 @@ plt.savefig(os.path.join(output_dir, 'feature_reduction.png'), dpi=300)
 plt.close()
 
 print(f"Plots saved to {output_dir}")
+
