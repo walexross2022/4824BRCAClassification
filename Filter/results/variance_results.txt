@@ -1,13 +1,74 @@
-=== BRCA Variance Threshold Sweep ===
+=== Variance Threshold Sweep (All Datasets) ===
 
-            Method  Threshold  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  Runtime (s)
-Variance Threshold       0.01              60660              44577  0.802432  0.679656     0.784135    15.954100
-Variance Threshold       0.05              60660              37634  0.802432  0.680236     0.786523    13.574947
-Variance Threshold       0.10              60660              34504  0.814590  0.716573     0.802019    12.368069
-Variance Threshold       0.25              60660              30306  0.829787  0.743453     0.818677    10.939233
-Variance Threshold       0.50              60660              27040  0.820669  0.743254     0.812624    10.015812
-Variance Threshold       0.75              60660              25207  0.805471  0.701271     0.791964     9.421538
+Cancer             Method  Threshold  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  Runtime (s)
+  BRCA Variance Threshold       0.01              60660              44577  0.802432  0.679656     0.784135    16.098577
+  BRCA Variance Threshold       0.05              60660              37634  0.802432  0.680236     0.786523    13.794011
+  BRCA Variance Threshold       0.10              60660              34504  0.814590  0.716573     0.802019    12.483894
+  BRCA Variance Threshold       0.25              60660              30306  0.829787  0.743453     0.818677    11.089622
+  BRCA Variance Threshold       0.50              60660              27040  0.820669  0.743254     0.812624    10.146398
+  BRCA Variance Threshold       0.75              60660              25207  0.805471  0.701271     0.791964     9.604378
+  COAD Variance Threshold       0.01              60660              38097  0.766990  0.636373     0.786144     4.714193
+  COAD Variance Threshold       0.05              60660              30558  0.796117  0.659205     0.811343     3.855103
+  COAD Variance Threshold       0.10              60660              27511  0.815534  0.697122     0.824624     3.571997
+  COAD Variance Threshold       0.25              60660              23707  0.834951  0.727727     0.842244     3.217990
+  COAD Variance Threshold       0.50              60660              21151  0.825243  0.720481     0.832787     2.973030
+  COAD Variance Threshold       0.75              60660              19781  0.796117  0.681119     0.807574     2.935591
+  PRAD Variance Threshold       0.01              60660              38914  0.670000  0.424703     0.703815     6.761036
+  PRAD Variance Threshold       0.05              60660              31581  0.620000  0.379010     0.652783     5.504949
+  PRAD Variance Threshold       0.10              60660              28452  0.660000  0.380830     0.691151     5.058202
+  PRAD Variance Threshold       0.25              60660              24607  0.680000  0.406681     0.706108     4.501938
+  PRAD Variance Threshold       0.50              60660              21844  0.700000  0.411542     0.721360     4.122869
+  PRAD Variance Threshold       0.75              60660              20382  0.710000  0.410576     0.731350     3.931052
+
+=== BRCA Summary ===
 
 Best Accuracy Threshold: 0.25
+  Accuracy: 0.8298
+  Macro F1: 0.7435
+  Runtime (s): 11.09
+
 Best Macro F1 Threshold: 0.25
+  Accuracy: 0.8298
+  Macro F1: 0.7435
+  Runtime (s): 11.09
+
 Fastest Runtime Threshold: 0.75
+  Accuracy: 0.8055
+  Macro F1: 0.7013
+  Runtime (s): 9.60
+
+
+=== COAD Summary ===
+
+Best Accuracy Threshold: 0.25
+  Accuracy: 0.8350
+  Macro F1: 0.7277
+  Runtime (s): 3.22
+
+Best Macro F1 Threshold: 0.25
+  Accuracy: 0.8350
+  Macro F1: 0.7277
+  Runtime (s): 3.22
+
+Fastest Runtime Threshold: 0.75
+  Accuracy: 0.7961
+  Macro F1: 0.6811
+  Runtime (s): 2.94
+
+
+=== PRAD Summary ===
+
+Best Accuracy Threshold: 0.75
+  Accuracy: 0.7100
+  Macro F1: 0.4106
+  Runtime (s): 3.93
+
+Best Macro F1 Threshold: 0.01
+  Accuracy: 0.6700
+  Macro F1: 0.4247
+  Runtime (s): 6.76
+
+Fastest Runtime Threshold: 0.75
+  Accuracy: 0.7100
+  Macro F1: 0.4106
+  Runtime (s): 3.93
