@@ -1,27 +1,22 @@
 # Filter/anova_filter.py
-
 import warnings
 warnings.filterwarnings("ignore")
 
 import os
-import time
+import sys
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+# Add parent directory to path to import shared_utils and app
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import load_dataset
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest, f_classif
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
+from shared_utils import evaluate_feature_set
 
-# -----------------------------
 # Configuration
-# -----------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(BASE_DIR, "Filter", "results")
 os.makedirs(OUT_DIR, exist_ok=True)
