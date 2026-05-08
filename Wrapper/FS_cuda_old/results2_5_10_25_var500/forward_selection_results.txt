@@ -1,0 +1,11 @@
+=== BRCA Forward Selection Sweep ===
+
+           Method  Feature Fraction  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  Runtime (s)
+Forward Selection             0.005              60660                  2  0.598784  0.472006     0.583402    22.172856
+Forward Selection             0.010              60660                  5  0.565350  0.456179     0.568684    29.696621
+Forward Selection             0.020              60660                 10  0.601824  0.493374     0.605007    58.982378
+Forward Selection             0.050              60660                 25  0.650456  0.556571     0.654776   146.166832
+
+Best Accuracy (n_features): 25
+Best Macro F1 (n_features): 25
+Fastest Runtime (n_features): 2
