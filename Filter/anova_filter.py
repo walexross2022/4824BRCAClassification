@@ -1,10 +1,15 @@
 # Filter/anova_filter.py
+
 import warnings
 warnings.filterwarnings("ignore")
 
 import os
 import sys
+import time
+import numpy as np
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Add parent directory to path to import shared_utils and app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,8 +17,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import load_dataset
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    confusion_matrix,
+    classification_report,
+    roc_auc_score
+)
+
 from shared_utils import evaluate_feature_set
 
 # Configuration
@@ -29,6 +44,7 @@ TOP_K = 5000
 # Main Runner
 # -----------------------------
 def run_anova_filter(cancer_type="BRCA"):
+
     cancer_type = cancer_type.upper()
 
     # -----------------------------
@@ -40,7 +56,8 @@ def run_anova_filter(cancer_type="BRCA"):
     # STEP 1: Train / Test Split
     # -----------------------------
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
+        X,
+        y,
         test_size=0.30,
         stratify=y,
         random_state=RANDOM_STATE
@@ -54,7 +71,11 @@ def run_anova_filter(cancer_type="BRCA"):
     # -----------------------------
     start_time = time.time()
 
-    selector = SelectKBest(score_func=f_classif, k=TOP_K)
+    selector = SelectKBest(
+        score_func=f_classif,
+        k=TOP_K
+    )
+
     X_train_selected = selector.fit_transform(X_train, y_train)
     X_test_selected = selector.transform(X_test)
 
@@ -69,6 +90,7 @@ def run_anova_filter(cancer_type="BRCA"):
     # STEP 3: Scale Reduced Features
     # -----------------------------
     scaler = StandardScaler()
+
     X_train_selected = scaler.fit_transform(X_train_selected)
     X_test_selected = scaler.transform(X_test_selected)
 
@@ -76,13 +98,18 @@ def run_anova_filter(cancer_type="BRCA"):
     # STEP 4: Train Classifier
     # -----------------------------
     print("\nStarting classifier training...")
+
     train_start = time.time()
 
-    model = SGDClassifier(loss="log_loss", random_state=RANDOM_STATE)
-    classes = y_train.unique()
+    model = LogisticRegression(
+        penalty="l2",
+        solver="saga",
+        max_iter=5000,
+        n_jobs=-1,
+        random_state=RANDOM_STATE
+    )
 
-    for epoch in range(50):
-        model.partial_fit(X_train_selected, y_train, classes=classes)
+    model.fit(X_train_selected, y_train)
 
     print(f"Training finished in {time.time() - train_start:.2f} seconds")
 
@@ -91,52 +118,155 @@ def run_anova_filter(cancer_type="BRCA"):
     # -----------------------------
     y_pred = model.predict(X_test_selected)
 
+    # Probability predictions
+    y_prob = model.predict_proba(X_test_selected)
+
+    # Fix numerical instability
+    y_prob = np.nan_to_num(
+        y_prob,
+        nan=0.0,
+        posinf=1.0,
+        neginf=0.0
+    )
+
+    # Normalize probabilities
+    y_prob = y_prob / y_prob.sum(axis=1, keepdims=True)
+
+    # Multiclass ROC-AUC
+    labels = sorted(y.unique())
+
+    y_test_bin = label_binarize(
+        y_test,
+        classes=labels
+    )
+
+    roc_auc = roc_auc_score(
+        y_test_bin,
+        y_prob,
+        multi_class="ovr",
+        average="macro"
+    )
+
+    # Standard metrics
     acc = accuracy_score(y_test, y_pred)
-    f1_macro = f1_score(y_test, y_pred, average="macro")
-    f1_weighted = f1_score(y_test, y_pred, average="weighted")
+
+    f1_macro = f1_score(
+        y_test,
+        y_pred,
+        average="macro"
+    )
+
+    f1_weighted = f1_score(
+        y_test,
+        y_pred,
+        average="weighted"
+    )
 
     runtime = time.time() - start_time
 
     print(f"\nAccuracy:      {acc:.4f}")
     print(f"Macro F1:      {f1_macro:.4f}")
     print(f"Weighted F1:   {f1_weighted:.4f}")
+    print(f"ROC-AUC:       {roc_auc:.4f}")
     print(f"Runtime (s):   {runtime:.2f}")
 
     # -----------------------------
     # STEP 6: Confusion Matrix
     # -----------------------------
-    labels = sorted(y.unique())
-    cm = confusion_matrix(y_test, y_pred, labels=labels)
+    cm = confusion_matrix(
+        y_test,
+        y_pred,
+        labels=labels
+    )
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                xticklabels=labels, yticklabels=labels)
+
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=labels,
+        yticklabels=labels
+    )
+
     plt.title(f"{cancer_type} - ANOVA Filter Confusion Matrix")
     plt.ylabel("True Label")
     plt.xlabel("Predicted Label")
+
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, f"{cancer_type.lower()}_anova_confusion_matrix.png"), dpi=150)
+
+    plt.savefig(
+        os.path.join(
+            OUT_DIR,
+            f"{cancer_type.lower()}_anova_confusion_matrix.png"
+        ),
+        dpi=150
+    )
+
     plt.close()
 
     # -----------------------------
     # STEP 7: Metrics Bar Chart
     # -----------------------------
     plt.figure(figsize=(8, 5))
-    metrics = ["Accuracy", "Macro F1", "Weighted F1"]
-    values = [acc, f1_macro, f1_weighted]
-    colors = ["#4C72B0", "#55A868", "#C44E52"]
 
-    bars = plt.bar(metrics, values, color=colors, edgecolor="black", linewidth=1.2)
+    metrics = [
+        "Accuracy",
+        "Macro F1",
+        "Weighted F1",
+        "ROC-AUC"
+    ]
+
+    values = [
+        acc,
+        f1_macro,
+        f1_weighted,
+        roc_auc
+    ]
+
+    colors = [
+        "#4C72B0",
+        "#55A868",
+        "#C44E52",
+        "#8172B2"
+    ]
+
+    bars = plt.bar(
+        metrics,
+        values,
+        color=colors,
+        edgecolor="black",
+        linewidth=1.2
+    )
+
     for bar, val in zip(bars, values):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                 f"{val:.3f}", ha="center", va="bottom", fontweight="bold")
+
+        plt.text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height() + 0.01,
+            f"{val:.3f}",
+            ha="center",
+            va="bottom",
+            fontweight="bold"
+        )
 
     plt.ylim(0, 1.1)
+
     plt.title(f"{cancer_type} - ANOVA Filter Performance")
     plt.ylabel("Score")
     plt.grid(axis="y", alpha=0.3)
+
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, f"{cancer_type.lower()}_anova_metrics_bar.png"), dpi=150)
+
+    plt.savefig(
+        os.path.join(
+            OUT_DIR,
+            f"{cancer_type.lower()}_anova_metrics_bar.png"
+        ),
+        dpi=150
+    )
+
     plt.close()
 
     # -----------------------------
@@ -151,15 +281,20 @@ def run_anova_filter(cancer_type="BRCA"):
         "Accuracy": acc,
         "Macro F1": f1_macro,
         "Weighted F1": f1_weighted,
+        "ROC-AUC": roc_auc,
         "Runtime (s)": runtime
     }])
 
     results.to_csv(
-        os.path.join(OUT_DIR, f"{cancer_type.lower()}_anova_filter_results.csv"),
+        os.path.join(
+            OUT_DIR,
+            f"{cancer_type.lower()}_anova_filter_results.csv"
+        ),
         index=False
     )
 
     print(f"\n[{cancer_type}] Done - results saved to {OUT_DIR}/")
+
     return results, classification_report(y_test, y_pred)
 
 
@@ -167,13 +302,18 @@ def run_anova_filter(cancer_type="BRCA"):
 # Run All + Save Combined TXT
 # -----------------------------
 if __name__ == "__main__":
+
     brca_results, brca_report = run_anova_filter("BRCA")
     coad_results, coad_report = run_anova_filter("COAD")
     prad_results, prad_report = run_anova_filter("PRAD")
 
-    all_results = pd.concat([brca_results, coad_results, prad_results], ignore_index=True)
+    all_results = pd.concat(
+        [brca_results, coad_results, prad_results],
+        ignore_index=True
+    )
 
     with open(os.path.join(OUT_DIR, "anova_results.txt"), "w") as f:
+
         f.write("=== ANOVA / F-test Filter (All Datasets) ===\n\n")
         f.write(all_results.to_string(index=False))
 
@@ -184,13 +324,18 @@ if __name__ == "__main__":
         }
 
         for cancer in ["BRCA", "COAD", "PRAD"]:
-            subset = all_results[all_results["Cancer"] == cancer].iloc[0]
+
+            subset = all_results[
+                all_results["Cancer"] == cancer
+            ].iloc[0]
 
             f.write(f"\n\n=== {cancer} Summary ===\n")
+
             f.write(f"\nTop K:         {int(subset['Top K'])}")
             f.write(f"\nAccuracy:      {subset['Accuracy']:.4f}")
             f.write(f"\nMacro F1:      {subset['Macro F1']:.4f}")
             f.write(f"\nWeighted F1:   {subset['Weighted F1']:.4f}")
+            f.write(f"\nROC-AUC:       {subset['ROC-AUC']:.4f}")
             f.write(f"\nRuntime (s):   {subset['Runtime (s)']:.2f}\n")
 
             f.write(f"\nClassification Report:\n{reports[cancer]}\n")

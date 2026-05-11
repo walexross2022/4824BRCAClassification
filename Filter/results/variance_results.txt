@@ -1,74 +1,89 @@
 === Variance Threshold Sweep (All Datasets) ===
 
-Cancer             Method  Threshold  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  Runtime (s)
-  BRCA Variance Threshold       0.01              60660              44577  0.802432  0.679656     0.784135    16.098577
-  BRCA Variance Threshold       0.05              60660              37634  0.802432  0.680236     0.786523    13.794011
-  BRCA Variance Threshold       0.10              60660              34504  0.814590  0.716573     0.802019    12.483894
-  BRCA Variance Threshold       0.25              60660              30306  0.829787  0.743453     0.818677    11.089622
-  BRCA Variance Threshold       0.50              60660              27040  0.820669  0.743254     0.812624    10.146398
-  BRCA Variance Threshold       0.75              60660              25207  0.805471  0.701271     0.791964     9.604378
-  COAD Variance Threshold       0.01              60660              38097  0.766990  0.636373     0.786144     4.714193
-  COAD Variance Threshold       0.05              60660              30558  0.796117  0.659205     0.811343     3.855103
-  COAD Variance Threshold       0.10              60660              27511  0.815534  0.697122     0.824624     3.571997
-  COAD Variance Threshold       0.25              60660              23707  0.834951  0.727727     0.842244     3.217990
-  COAD Variance Threshold       0.50              60660              21151  0.825243  0.720481     0.832787     2.973030
-  COAD Variance Threshold       0.75              60660              19781  0.796117  0.681119     0.807574     2.935591
-  PRAD Variance Threshold       0.01              60660              38914  0.670000  0.424703     0.703815     6.761036
-  PRAD Variance Threshold       0.05              60660              31581  0.620000  0.379010     0.652783     5.504949
-  PRAD Variance Threshold       0.10              60660              28452  0.660000  0.380830     0.691151     5.058202
-  PRAD Variance Threshold       0.25              60660              24607  0.680000  0.406681     0.706108     4.501938
-  PRAD Variance Threshold       0.50              60660              21844  0.700000  0.411542     0.721360     4.122869
-  PRAD Variance Threshold       0.75              60660              20382  0.710000  0.410576     0.731350     3.931052
+Cancer             Method  Threshold  Original Features  Selected Features  Accuracy  Macro F1  Weighted F1  ROC-AUC  Runtime (s)
+  BRCA Variance Threshold       0.05              60660              37634  0.778116  0.670137     0.756536 0.780453    37.770543
+  BRCA Variance Threshold       0.10              60660              34504  0.762918  0.652134     0.738518 0.782589    37.291298
+  BRCA Variance Threshold       0.25              60660              30306  0.775076  0.673800     0.757709 0.808150    27.426535
+  BRCA Variance Threshold       0.50              60660              27040  0.772036  0.673878     0.753421 0.807444    21.980264
+  BRCA Variance Threshold       0.75              60660              25207  0.768997  0.667812     0.748409 0.800798    28.278470
+  COAD Variance Threshold       0.05              60660              30558  0.873786  0.597825     0.855358 0.770903    15.492147
+  COAD Variance Threshold       0.10              60660              27511  0.864078  0.564723     0.828571 0.732446    15.071453
+  COAD Variance Threshold       0.25              60660              23707  0.883495  0.618428     0.868381 0.796639     9.765822
+  COAD Variance Threshold       0.50              60660              21151  0.873786  0.605519     0.855504 0.785084     7.793082
+  COAD Variance Threshold       0.75              60660              19781  0.893204  0.614182     0.867994 0.799494     8.075052
+  PRAD Variance Threshold       0.05              60660              31581  0.710000  0.336811     0.698041 0.651254    25.999201
+  PRAD Variance Threshold       0.10              60660              28452  0.740000  0.330786     0.694355 0.650404    24.873912
+  PRAD Variance Threshold       0.25              60660              24607  0.720000  0.342057     0.678919 0.653768    17.372186
+  PRAD Variance Threshold       0.50              60660              21844  0.740000  0.329793     0.692932 0.635812    15.188285
+  PRAD Variance Threshold       0.75              60660              20382  0.770000  0.359827     0.727491 0.654505    13.602324
 
 === BRCA Summary ===
 
-Best Accuracy Threshold: 0.25
-  Accuracy: 0.8298
-  Macro F1: 0.7435
-  Runtime (s): 11.09
+Best Accuracy Threshold: 0.05
+  Accuracy: 0.7781
+  Macro F1: 0.6701
+  Weighted F1: 0.7565
+  ROC-AUC: 0.7805
+  Runtime (s): 37.77
 
-Best Macro F1 Threshold: 0.25
-  Accuracy: 0.8298
-  Macro F1: 0.7435
-  Runtime (s): 11.09
+Best Macro F1 Threshold: 0.5
+  Accuracy: 0.7720
+  Macro F1: 0.6739
+  Weighted F1: 0.7534
+  ROC-AUC: 0.8074
+  Runtime (s): 21.98
 
-Fastest Runtime Threshold: 0.75
-  Accuracy: 0.8055
-  Macro F1: 0.7013
-  Runtime (s): 9.60
+Fastest Runtime Threshold: 0.5
+  Accuracy: 0.7720
+  Macro F1: 0.6739
+  Weighted F1: 0.7534
+  ROC-AUC: 0.8074
+  Runtime (s): 21.98
 
 
 === COAD Summary ===
 
-Best Accuracy Threshold: 0.25
-  Accuracy: 0.8350
-  Macro F1: 0.7277
-  Runtime (s): 3.22
+Best Accuracy Threshold: 0.75
+  Accuracy: 0.8932
+  Macro F1: 0.6142
+  Weighted F1: 0.8680
+  ROC-AUC: 0.7995
+  Runtime (s): 8.08
 
 Best Macro F1 Threshold: 0.25
-  Accuracy: 0.8350
-  Macro F1: 0.7277
-  Runtime (s): 3.22
+  Accuracy: 0.8835
+  Macro F1: 0.6184
+  Weighted F1: 0.8684
+  ROC-AUC: 0.7966
+  Runtime (s): 9.77
 
-Fastest Runtime Threshold: 0.75
-  Accuracy: 0.7961
-  Macro F1: 0.6811
-  Runtime (s): 2.94
+Fastest Runtime Threshold: 0.5
+  Accuracy: 0.8738
+  Macro F1: 0.6055
+  Weighted F1: 0.8555
+  ROC-AUC: 0.7851
+  Runtime (s): 7.79
 
 
 === PRAD Summary ===
 
 Best Accuracy Threshold: 0.75
-  Accuracy: 0.7100
-  Macro F1: 0.4106
-  Runtime (s): 3.93
+  Accuracy: 0.7700
+  Macro F1: 0.3598
+  Weighted F1: 0.7275
+  ROC-AUC: 0.6545
+  Runtime (s): 13.60
 
-Best Macro F1 Threshold: 0.01
-  Accuracy: 0.6700
-  Macro F1: 0.4247
-  Runtime (s): 6.76
+Best Macro F1 Threshold: 0.75
+  Accuracy: 0.7700
+  Macro F1: 0.3598
+  Weighted F1: 0.7275
+  ROC-AUC: 0.6545
+  Runtime (s): 13.60
 
 Fastest Runtime Threshold: 0.75
-  Accuracy: 0.7100
-  Macro F1: 0.4106
-  Runtime (s): 3.93
+  Accuracy: 0.7700
+  Macro F1: 0.3598
+  Weighted F1: 0.7275
+  ROC-AUC: 0.6545
+  Runtime (s): 13.60
