@@ -1,0 +1,25 @@
+Standardized Report: RandomForest on PRAD
+Features: 5773
+Training Time: 0.26s
+Accuracy: 0.7800
+Macro F1: 0.3769
+Weighted F1: 0.7407
+Macro Recall: 0.3787
+Weighted Recall: 0.7800
+ROC-AUC: 0.9519
+
+Classification Report:
+              precision    recall  f1-score   support
+
+  PRAD.1-ERG       0.85      0.96      0.90        46
+ PRAD.2-ETV1       0.67      0.50      0.57         8
+ PRAD.3-ETV4       0.00      0.00      0.00         4
+ PRAD.4-FLI1       0.00      0.00      0.00         1
+ PRAD.5-SPOP       0.89      0.73      0.80        11
+PRAD.6-FOXA1       0.00      0.00      0.00         3
+ PRAD.7-IDH1       0.00      0.00      0.00         1
+PRAD.8-other       0.67      0.85      0.75        26
+
+    accuracy                           0.78       100
+   macro avg       0.38      0.38      0.38       100
+weighted avg       0.71      0.78      0.74       100

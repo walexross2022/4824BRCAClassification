@@ -13,7 +13,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
-from app import load_dataset
+from app import load_dataset, load_dataset_cached
 
 from sklearn.model_selection import train_test_split
 
@@ -53,14 +53,17 @@ THRESHOLDS = [
 # -----------------------------
 # Main Runner
 # -----------------------------
-def run_variance_filter(cancer_type="BRCA"):
+def run_variance_filter(cancer_type="BRCA", seed=RANDOM_STATE, save_plots=True, use_cache=True, n_jobs=-1):
 
     cancer_type = cancer_type.upper()
 
     # -----------------------------
     # STEP 0: Load Dataset
     # -----------------------------
-    X, y = load_dataset(cancer_type)
+    if use_cache:
+        X, y = load_dataset_cached(cancer_type)
+    else:
+        X, y = load_dataset(cancer_type)
 
     # -----------------------------
     # STEP 1: Train / Test Split
@@ -70,7 +73,7 @@ def run_variance_filter(cancer_type="BRCA"):
         y,
         test_size=0.30,
         stratify=y,
-        random_state=RANDOM_STATE
+        random_state=seed
     )
 
     print(f"\n[{cancer_type}] Train shape: {X_train.shape}")
@@ -123,7 +126,8 @@ def run_variance_filter(cancer_type="BRCA"):
             loss="log_loss",
             max_iter=1000,
             tol=1e-3,
-            random_state=RANDOM_STATE
+            random_state=seed,
+            n_jobs=n_jobs if n_jobs != -1 else None,
         )
 
         model.fit(X_train_scaled, y_train)
@@ -216,10 +220,14 @@ def run_variance_filter(cancer_type="BRCA"):
             "Macro F1": f1_macro,
             "Weighted F1": f1_weighted,
             "ROC-AUC": roc_auc,
-            "Runtime (s)": runtime
+            "Runtime (s)": runtime,
+            "Seed": seed,
         })
 
     results = pd.DataFrame(all_results)
+
+    if not save_plots:
+        return results
 
     # -----------------------------
     # Save per-dataset CSV

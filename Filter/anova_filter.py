@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 # Add parent directory to path to import shared_utils and app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app import load_dataset
+from app import load_dataset, load_dataset_cached
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, label_binarize
@@ -43,14 +43,17 @@ TOP_K = 5000
 # -----------------------------
 # Main Runner
 # -----------------------------
-def run_anova_filter(cancer_type="BRCA"):
+def run_anova_filter(cancer_type="BRCA", seed=RANDOM_STATE, save_plots=True, use_cache=True, n_jobs=-1):
 
     cancer_type = cancer_type.upper()
 
     # -----------------------------
     # STEP 0: Load Dataset
     # -----------------------------
-    X, y = load_dataset(cancer_type)
+    if use_cache:
+        X, y = load_dataset_cached(cancer_type)
+    else:
+        X, y = load_dataset(cancer_type)
 
     # -----------------------------
     # STEP 1: Train / Test Split
@@ -60,7 +63,7 @@ def run_anova_filter(cancer_type="BRCA"):
         y,
         test_size=0.30,
         stratify=y,
-        random_state=RANDOM_STATE
+        random_state=seed
     )
 
     print(f"\n[{cancer_type}] Train shape: {X_train.shape}")
@@ -103,10 +106,10 @@ def run_anova_filter(cancer_type="BRCA"):
 
     model = LogisticRegression(
         penalty="l2",
-        solver="saga",
+        solver="lbfgs",
         max_iter=5000,
-        n_jobs=-1,
-        random_state=RANDOM_STATE
+        n_jobs=n_jobs,
+        random_state=seed
     )
 
     model.fit(X_train_selected, y_train)
@@ -169,6 +172,22 @@ def run_anova_filter(cancer_type="BRCA"):
     print(f"Weighted F1:   {f1_weighted:.4f}")
     print(f"ROC-AUC:       {roc_auc:.4f}")
     print(f"Runtime (s):   {runtime:.2f}")
+
+    if not save_plots:
+        results = pd.DataFrame([{
+            "Cancer": cancer_type,
+            "Method": "ANOVA / F-test",
+            "Top K": TOP_K,
+            "Original Features": X.shape[1],
+            "Selected Features": selected_features,
+            "Accuracy": acc,
+            "Macro F1": f1_macro,
+            "Weighted F1": f1_weighted,
+            "ROC-AUC": roc_auc,
+            "Runtime (s)": runtime,
+            "Seed": seed,
+        }])
+        return results, classification_report(y_test, y_pred)
 
     # -----------------------------
     # STEP 6: Confusion Matrix
@@ -282,7 +301,8 @@ def run_anova_filter(cancer_type="BRCA"):
         "Macro F1": f1_macro,
         "Weighted F1": f1_weighted,
         "ROC-AUC": roc_auc,
-        "Runtime (s)": runtime
+        "Runtime (s)": runtime,
+        "Seed": seed,
     }])
 
     results.to_csv(

@@ -1,0 +1,671 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{multirow}
+
+% we want 6-9 pages
+% AURC 
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2026
+
+% The authors should use one of these tracks.
+% Before accepting by the NeurIPS conference, select one of the options below.
+% 0. "default" for submission
+\usepackage[nonanonymous]{neurips_2026}
+% the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
+% 1. "main" option is used for the Main Track
+%  \usepackage[main]{neurips_2026}
+% 2. "position" option is used for the Position Paper Track
+%  \usepackage[position]{neurips_2026}
+% 3. "eandd" option is used for the Evaluations & Datasets Track
+ % \usepackage[eandd]{neurips_2026}
+% 4. "creativeai" option is used for the Creative AI Track
+%  \usepackage[creativeai]{neurips_2026}
+% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
+ % \usepackage[sglblindworkshop]{neurips_2026}
+% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop]{neurips_2026}
+
+% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
+% 1. Main Track
+ % \usepackage[main, final]{neurips_2026}
+% 2. Position Paper Track
+%  \usepackage[position, final]{neurips_2026}
+% 3. Evaluations & Datasets Track
+ % \usepackage[eandd, final]{neurips_2026}
+% 4. Creative AI Track
+%  \usepackage[creativeai, final]{neurips_2026}
+% 5. Workshop with single-blind reviewing
+%  \usepackage[sglblindworkshop, final]{neurips_2026}
+% 6. Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop, final]{neurips_2026}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
+% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
+% \workshoptitle{WORKSHOP TITLE}
+
+% "preprint" option is used for arXiv or other preprint submissions
+ % \usepackage[preprint]{neurips_2026}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2026}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
+\title{Benchmarking feature selection techniques for cancer subtype classification}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+
+\author{%
+  Bryan Pham \\
+  Department of Computer and Electrical Engineering \\
+  Virginia Tech \\
+  \texttt{phambryan22@vt.edu} \\
+  \And
+  Qianhe (Ted) Sha \\
+  Department of Computer Science \\
+  Virginia Tech \\
+  \texttt{jungter@vt.edu} \\
+  \And
+  William Alex Ross \\
+  Department of Computational Modeling and Data Analytics \\
+  Virginia Tech \\
+  \texttt{walexross2022@vt.edu} \\
+  \And
+  Yassin Lahrime \\
+  Department of Computer and Electrical Engineering \\
+  Virginia Tech \\
+  \texttt{yassinl@vt.edu} \\
+}
+
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Classification of cancer subtypes from high-dimensional genomic data presents a significant challenge due to the "curse of dimensionality," where gene expression features ($p=60{,}660$) vastly exceed available samples ($n \approx 600$). This study benchmarks the performance and computational trade-offs of filter, wrapper, and embedded feature selection methods using TCGA datasets (BRCA, COAD, and PRAD). We evaluate these techniques against a high-dimensional Logistic Regression baseline to assess impact on predictive accuracy, Macro F1 scores, and runtime efficiency. Our results demonstrate that while ANOVA and Mutual Information can reduce the feature space by over 90\% (to $p=2{,}000$ or $5{,}000$), they do not necessarily incur performance trade-offs; in several cohorts, filter methods outperformed the full-feature baseline, such as an increase in BRCA Macro F1 from 0.7268 to 0.7715. However, severe class imbalance in the PRAD dataset remained a challenge, with Macro F1 scores plateauing near 0.42 despite high raw accuracy. We conclude that for genomic data, strategic feature selection serves as a critical regularizing step that can mitigate noise and surpass the performance of high-dimensional models that utilize the full transcriptomic profile.
+\end{abstract}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Introduction}
+
+The classification of cancer subtypes is a fundamental challenge in precision oncology. Accurate identification of these subtypes is critical for predicting disease progression and tailoring therapeutic interventions to individual patients. Traditionally, cancer diagnosis relied on histopathological examination; however, the advent of high-throughput sequencing has allowed researchers to utilize gene expression profiles to identify molecular signatures that differentiate subtypes with higher resolution. In this study, we utilize transcriptomic data from The Cancer Genome Atlas (TCGA), focusing on three cohorts with varying degrees of complexity:
+\begin{itemize}
+    \item TCGA-BRCA (Breast Cancer): Our largest dataset, comprising 1,231 samples and 5 distinct molecular subtypes.
+    \item TCGA-COAD (Colon Cancer): A medium-sized cohort of 524 samples categorized into 4 subtypes.
+    \item TCGA-PRAD (Prostate Cancer): A cohort of 554 samples with 8 subtypes, characterized by severe class imbalance.
+\end{itemize}
+
+\subsection{The Curse of Dimensionality in Genomics}
+
+From a machine learning perspective, genomic datasets present a classic "high-dimensional, low-sample size" (HDLSS) problem. For each patient sample, we measure $p = 60,660$ gene expression levels (features), while the number of available samples $n$ is several orders of magnitude smaller ($n \approx 500$ to $1,200$). This extreme feature-to-sample ratio creates a high risk of overfitting, where models may capture noise or patient-specific artifacts rather than generalizable biological signals. 
+
+Existing approaches often struggle to balance computational efficiency with predictive power. While deep learning has seen success in other domains, its application here is limited by the lack of massive labeled datasets. Consequently, feature selection remains an essential preprocessing step to reduce the search space and improve model interpretability. However, many selection methods are either computationally "blind" to feature interactions (filter methods) or prohibitively expensive to run on the full genome (wrapper methods).
+
+\subsection{Contributions}
+
+In this paper, we perform a rigorous benchmarking of feature selection strategies to evaluate their impact on cancer subtype classification. Our contributions are as follows:
+\begin{itemize}
+    \item We establish high-dimensional performance benchmarks using a full-feature Logistic Regression baseline with the SAGA and L-BFGS solvers.
+    \item We evaluate the trade-offs between three major feature selection categories—Filter (ANOVA, Mutual Information), Wrapper (SelectKBest, Forward Selection), and Embedded (LASSO, Random Forest)—across three distinct cancer types.
+    \item We quantify the impact of class imbalance on feature selection, specifically demonstrating how metrics like Macro F1 reveal performance degradation that raw accuracy fails to capture.
+    \item We analyze the "Baseline Paradox," investigating cases where aggressive feature reduction leads to a loss of cumulative predictive information versus cases where it provides necessary regularization against noise.
+\end{itemize}
+
+\subsection{Data Breakdown}
+
+Table~\ref{tab:datasets} summarizes the dimensions of our datasets. Given the HDLSS nature of the data, we focus on classical machine learning frameworks, which offer better stability and interpretability than deep learning architectures in data-scarce environments.
+
+\begin{table}[htbp]
+\centering
+\caption{Dataset dimensionality and class distribution for TCGA cancer subtype benchmarks.}
+\label{tab:datasets}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Dataset} & \textbf{Samples ($n$)} & \textbf{Features ($p$)} & \textbf{Subtypes (Classes)} \\
+\midrule
+TCGA-BRCA (Breast)   & 1,231 & 60,660 & 5 \\
+TCGA-COAD (Colon)    & 524   & 60,660 & 4 \\
+TCGA-PRAD (Prostate) & 554   & 60,660 & 8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+\section{Related Work}
+
+The "High-Dimension Low-Sample Size" (HDLSS) nature of genomic data often leads to the "curse of dimensionality," where sparse feature spaces cause catastrophic overfitting \cite{hdlss_curse}. In TCGA datasets \cite{tcga_resource}, identifying a parsimonious gene subset from 60,660 markers is a biological requirement for interpretability and a computational necessity for model stability.
+
+\subsection{Feature Selection Paradigms}
+
+Feature selection is traditionally categorized into three paradigms \cite{genomic_benchmarking}: 
+
+Filter Methods (e.g., ANOVA, Mutual Information \cite{mutual_info}) are computationally efficient and independent of the classifier. However, univariate filters often ignore synergistic gene-gene interactions inherent in biological pathways. Our work evaluates if this efficiency justifies the potential loss in predictive synergy. Wrapper Methods (e.g., RFE \cite{rfe_wrapper}, Forward Selection) treat selection as a search problem using a classifier to evaluate subsets. While they capture feature dependencies, they are prohibitively expensive on 60,000 features. We mitigate this via variance-based pre-filtering to reduce the search space to a computationally feasible subset. Embedded Methods integrate selection into the objective function. LASSO \cite{lasso_foundational} is a standard for simultaneous regularization and selection, implemented here using the SAGA solver \cite{saga_solver} via Scikit-learn \cite{scikit-learn}. However, LASSO can struggle with grouped effects in co-expressed gene modules. Alternatively, tree-based embedded methods like Random Forests provide non-linear feature importance rankings, though they may be susceptible to bias in highly imbalanced datasets.
+
+\subsection{Class Imbalance and Positioning}
+
+A critical challenge in TCGA benchmarking is class imbalance; models often maximize accuracy while failing to identify rare subtypes, such as those in the PRAD cohort. We utilize the Macro F1-score to evaluate how selection paradigms impact minority class identification. Unlike literature proposing singular algorithms, this study provides a comprehensive benchmark across all three paradigms against a high-dimensional baseline. We position our work as a comparative analysis of the trade-off between runtime, sparsity, and balanced performance, clarifying whether feature selection serves as a biological benefit or a performance compromise in the presence of noise and imbalance.
+
+
+
+
+
+
+
+
+
+
+
+\section{Methodology}
+
+Our methodology evaluates the trade-offs between computational efficiency and classification performance in high-dimensional genomic environments \cite{hdlss_curse, genomic_benchmarking}. We implemented a multi-stage pipeline consisting of dimensionality reduction followed by a multinomial classification layer. For formulating the problem we opted to constrain as many of the problem space as possible between difference feature selectors. While this wasn't entirely possible because not all classifers would be compatible between models we tried to keep things consistent by using logistic regression on all models and k cross folding whenever applicable for the given models. 
+
+\subsection{Problem Formulation}
+
+The task is defined as a multi-class classification problem. Given a gene expression matrix $X \in \mathbb{R}^{n \times p}$ with approximately $n \approx 600$ samples and $p = 60{,}660$ gene expression features, we aim to predict a discrete label $y \in \{1, \dots, K\}$ representing the cancer subtype. Because $p \gg n$, the primary objective is to identify an optimal subset of genes $p' \subset p$ that maximizes the Macro F1-score while minimizing computational runtime and model complexity \cite{hdlss_curse}.
+
+\subsection{Experimental Pipeline}
+
+The experimental workflow follows a standardized sequence to ensure comparability across different feature selection methods:
+
+\begin{enumerate}
+    \item \textbf{Preprocessing:} Expression matrices were aligned with subtype labels using TCGA patient identifiers. Samples were normalized using a standard scaler to ensure zero mean and unit variance prior to model training.
+    
+    \item \textbf{Feature Selection:} The dataset was passed through one of three selection frameworks (Filter, Wrapper, or Embedded) to reduce the feature space from $p$ to $p'$.
+    
+    \item \textbf{Model Training:} A multinomial Logistic Regression classifier was trained on the reduced feature set using a stratified 70/30 train-validation split.
+    
+    \item \textbf{Evaluation:} Performance was evaluated across ten randomized trials to account for variability in data splitting and initialization.
+\end{enumerate}
+
+\subsection{Feature Selection Framework}
+
+We benchmarked three distinct categories of feature selection methods to evaluate their impact on classification performance and dimensionality reduction efficiency \cite{genomic_benchmarking}.
+
+\begin{itemize}
+
+    \item \textbf{Filter Methods:} We implemented Variance Thresholding, ANOVA F-tests, and Mutual Information (MI). Variance Thresholding removed genes with low variance across samples using thresholds $\tau \in [0.05, 0.75]$. ANOVA and MI ranked genes independently of the classifier according to statistical significance and nonlinear dependence, respectively \cite{mutual_info}.
+    
+    \item \textbf{Wrapper Methods:} We utilized SelectKBest and Sequential Forward Selection (SFS). Because standard forward selection becomes computationally prohibitive in extremely high-dimensional settings, we first applied a variance-based pre-filter to reduce the search space to the top 2,000 high-variance genes before iterative selection \cite{rfe_wrapper}.
+    
+    \item \textbf{Embedded Methods:} We implemented LASSO (L1 regularization) and Random Forest feature importance. These methods integrate feature selection directly into the training process by shrinking coefficients or evaluating impurity reduction during optimization \cite{lasso_foundational}.
+    
+\end{itemize}
+
+\subsection{Classification Architecture and Solver Selection}
+
+The classification layer primarily utilized Logistic Regression implemented through the scikit-learn framework \cite{scikit-learn}. Solver selection varied depending on the computational requirements of each experiment.
+
+For baseline and filter experiments, we employed the SAGA solver due to its efficiency on large-scale multinomial optimization problems and its support for both L1 and L2 regularization \cite{saga_solver}. SAGA demonstrated substantially faster convergence than standard gradient-based optimization approaches on high-dimensional genomic datasets.
+
+For iterative wrapper experiments, we utilized the SGDClassifier (Stochastic Gradient Descent classifier) to reduce memory overhead during repeated high-dimensional feature evaluations. Incremental weight updates allowed the wrapper experiments to remain computationally feasible despite the large search space.
+
+\subsection{Optimization Objective and Evaluation Rationale}
+
+All models were optimized using multinomial Cross-Entropy loss:
+
+\[
+L(\theta) =
+-\frac{1}{n}
+\sum_{i=1}^{n}
+\sum_{k=1}^{K}
+y_{i,k}\log(p_{i,k})
+\]
+
+where $p_{i,k}$ represents the predicted probability that sample $i$ belongs to subtype class $k$.
+
+A central motivation of this work is the observation that high-dimensional genomic baselines frequently establish a strong performance ceiling despite the presence of redundant or weakly informative genes. We refer to this phenomenon as the ``Baseline Paradox,'' where aggressive feature reduction may improve computational efficiency while failing to significantly improve predictive performance.
+
+Because the PRAD dataset exhibits severe subtype imbalance, we prioritized Macro F1-score as the primary evaluation metric rather than overall Accuracy alone. Macro F1 equally weights all subtype classes and therefore provides a more reliable assessment of minority subtype performance in imbalanced genomic classification tasks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Experiments}
+
+This section details the experimental environment, preprocessing protocols, and evaluation metrics used to benchmark the feature selection frameworks. To ensure a fair comparison, all experiments were conducted using a consistent software stack and hardware configuration.
+
+\subsection{Dataset Preparation and Preprocessing}
+
+The raw transcriptomic data from the TCGA cohorts (BRCA, COAD, and PRAD) was processed to ensure consistency across samples. We applied a standard scaling transformation to the feature matrices, centering the mean to zero and scaling to unit variance. This step is critical for the convergence of the SAGA and Stochastic Gradient Descent (SGD) solvers utilized in our classification pipeline.
+
+For each cohort, we implemented a 70:30 train-validation split. The training partition was used for both the feature selection search and model parameter optimization, while the remaining 30 percent was held out as a validation set. This stratification ensures that the reported performance metrics reflect the model ability to generalize to unseen genomic profiles.
+
+\subsection{Reproducibility and Stability}
+
+To account for the variance inherent in random data partitioning and model initialization, we conducted ten independent trials for every experiment using different random seeds. The results reported in this study represent the mean performance and standard deviation across these ten iterations. This rigorous seeding approach allows us to evaluate the stability of each feature selection category and ensures that the findings are statistically robust.
+
+\subsection{Evaluation Metrics}
+
+Given the significant class imbalance present in genomic datasets—most notably the PRAD cohort—accuracy alone is an insufficient measure of model quality. We evaluated our models using the following metrics:
+
+\begin{itemize}
+    \item Accuracy: The overall percentage of correctly identified cancer subtypes.
+    \item Macro F1-Score: Our primary metric for comparison. By calculating the F1-score for each subtype independently and then averaging them, this metric ensures that the performance on minority classes is weighted equally to majority classes.
+    \item AUROC (Area Under the Receiver Operating Characteristic): We utilized the one-vs-rest AUROC to assess the diagnostic ability of our multiclass classifiers across varying decision thresholds.
+\end{itemize}
+
+\subsection{Baselines and Computational Constraints}
+
+Our primary control is the Full-Feature Baseline, which utilizes the complete set of 60,660 genes without any dimensionality reduction. This model establishes a reference performance ceiling. All experiments were conducted on machines equipped with 16GB of RAM and multi-core CPUs. Due to the high computational complexity of wrapper-based search algorithms on 60,000+ dimensions, Sequential Forward Selection was restricted to a pre-filtered feature space of the top 2,000 high-variance genes to ensure feasible execution runtimes.
+
+
+
+
+
+
+
+
+
+
+
+\section{Results}
+
+In this section, we present the quantitative results of our benchmarking experiments across the three TCGA datasets. We evaluate each category of feature selection—filter, wrapper, and embedded—based on their ability to maintain classification accuracy and Macro F1 scores while reducing the feature space.
+
+% Add this right before \subsection{Baseline Performance}
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}{0.80\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{accuracy_comparison_bymethod.png}
+    \caption{Classification Accuracy across all feature selection methods for BRCA, COAD, and PRAD cohorts.}
+    \label{fig:accuracy_comp}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.80\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{f1_comparison_bymethod.png}
+    \caption{Macro F1-Score comparison highlighting the sensitivity of various methods to class imbalance.}
+    \label{fig:f1_comp}
+  \end{minipage}
+\end{figure}
+
+% Place this inside \subsection{Baseline Performance}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{cross_cancer_per_metric_comparison.png}
+  \caption{Per-metric baseline performance (mean $\pm$ std over 10 runs) across BRCA, COAD, and PRAD cohorts.}
+  \label{fig:baseline_multi}
+\end{figure}
+
+
+\subsection{Baseline Performance}
+
+To establish a performance upper bound, we trained a Logistic Regression model using the L-BFGS solver on the complete feature set of 60,660 genes. This baseline represents the model's performance without any explicit feature selection, relying solely on the solver's internal regularization to handle the high dimensionality. The results, summarized in Table~\ref{tab:baseline_metrics} and visualized across multiple metrics in Figure~\ref{fig:baseline_multi}, serve as the primary point of comparison for all subsequent selection methods.
+
+\begin{table}[htbp]
+\centering
+\caption{Baseline Performance Metrics using the Full Feature Set ($p=60{,}660$). Values are means $\pm$ standard deviations over 10 random seeds.}
+\label{tab:baseline_metrics}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Dataset} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{ROC-AUC}  \\
+\midrule
+TCGA-BRCA & $0.8176 \pm 0.024$ & $0.7268 \pm 0.028$ & $0.9377 \pm 0.012$ \\
+TCGA-COAD & $0.8320 \pm 0.025$ & $0.5825 \pm 0.028$ & $0.9254 \pm 0.028$ \\
+TCGA-PRAD & $0.7620 \pm 0.040$ & $0.3811 \pm 0.038$ & $0.9325 \pm 0.017$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The baseline results confirm the high predictive potential of the full transcriptomic profile. Notably, the PRAD dataset's baseline Macro F1-score ($0.3811 \pm 0.038$) already indicates the difficulty of identifying minority subtypes, even with access to all available features. As seen in Figure~\ref{fig:f1_comp}, the performance ceiling for F1-scores is significantly lower than raw accuracy across all methods, with the gap most pronounced on COAD (Accuracy $0.832$ vs Macro F1 $0.583$) and PRAD (Accuracy $0.762$ vs Macro F1 $0.381$). This suggests that the loss of information observed in some selection methods is a deviation from this established ceiling rather than an inherent failure of the classifier itself.
+
+
+\subsection{Filter Methods}
+
+Filter-based feature selection methods provided a computationally efficient means of reducing the high-dimensionality of the TCGA datasets while maintaining competitive classification performance. By evaluating genomic features independently of the learning algorithm, these methods scaled significantly better than wrapper or embedded approaches. We performed an extensive sweep of Variance Thresholds ($0.05$ to $0.75$) and evaluated statistical univariate selectors, including ANOVA F-tests and Mutual Information (MI), to identify the optimal subset of genes for subtype prediction. All metrics in this section report the mean across 10 random seeds; per-method standard deviations were small (typically $\sigma \leq 0.04$ for F1 and accuracy).
+
+The results indicate that while Variance Thresholding is computationally cheap—averaging under 5 seconds per threshold across all three datasets—it generally requires a much larger feature space ($\sim$20,000–28,000 features) to remain competitive. In contrast, Mutual Information and ANOVA selectors achieved superior accuracy and AUC with significantly fewer features ($2,000$ to $5,000$). After replacing the original SAGA solver with L-BFGS in the downstream Logistic Regression, ANOVA runtimes collapsed to under 3 seconds per dataset; Mutual Information remained the runtime bottleneck at roughly 170–232 seconds per dataset, dominated by the cost of estimating MI scores across 60,660 features. Performance metrics are summarized in Table~\ref{tab:filter_metrics}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.80\textwidth]{featurecountredution.png} 
+  \caption{Feature Count Reduction on a Logarithmic Scale. Note the significant compression achieved by Filter (ANOVA) and Embedded (Random Forest) methods relative to the 60,660-feature baseline.}
+  \label{fig:feature_red}
+\end{figure}
+\begin{table}[htbp]
+\centering
+\caption{Performance Metrics for Filter Feature Selection Methods across TCGA Datasets. Values are means over 10 random seeds. For each dataset, the reported Variance Threshold is the threshold that achieved the highest mean Macro F1 in the sweep.}
+\label{tab:filter_metrics}
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+\textbf{Dataset} & \textbf{Method} & \textbf{Parameter} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{ROC-AUC} & \textbf{Features} \\
+\midrule
+\multirow{3}{*}{BRCA}
+& Variance Threshold & 0.50      & 0.7924 & 0.7048 & 0.8660     & 27,040 \\
+& Mutual Information & Top 2000  & 0.8249 & 0.7602 & 0.9505     & 2,000 \\
+& ANOVA / F-test     & Top 5000  & 0.8374 & 0.7715 & 0.9533     & 5,000 \\
+\midrule
+\multirow{3}{*}{COAD}
+& Variance Threshold & 0.50      & 0.8068 & 0.6742 & 0.8774     & 21,151 \\
+& Mutual Information & Top 2000  & 0.8650 & 0.6234 & 0.9422     & 2,000 \\
+& ANOVA / F-test     & Top 5000  & 0.8553 & 0.5974 & 0.9180     & 5,000 \\
+\midrule
+\multirow{3}{*}{PRAD}
+& Variance Threshold & 0.10      & 0.7730 & 0.4668 & 0.7943     & 28,452 \\
+& Mutual Information & Top 2000  & 0.8080 & 0.4096 & 0.9007     & 2,000 \\
+& ANOVA / F-test     & Top 5000  & 0.8090 & 0.4213 & 0.8790     & 5,000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Analysis of Filter Methods}
+The analysis of our filter method sweep, repeated across 10 seeds per configuration, reveals a nuanced trade-off between runtime efficiency and class-balanced performance. ANOVA F-tests emerged as the strongest balanced selector for the BRCA dataset, achieving the highest mean Accuracy (0.8374) and Macro F1 (0.7715) while compressing the feature space to roughly 8\% of its original size. On COAD, Mutual Information yielded the highest Accuracy (0.8650), but its Macro F1 (0.6234) was outperformed by Variance Thresholding at the $0.50$ cutoff (0.6742), illustrating that high overall accuracy does not always imply better recovery of minority subtypes.
+
+A consistent trend across all filter methods was the difficulty in classifying the PRAD dataset, where Macro F1 scores remained notably low ($\sim$0.41–0.47) despite Accuracy values above 0.77. The classification reports suggest that while the models are proficient at identifying common subtypes like PRAD.1-ERG, they frequently fail on rare subtypes such as PRAD.3, 4, 6, and 7, which had zero precision and recall across multiple seeds. This confirms that while filter methods can effectively manage the "curse of dimensionality," they do not inherently solve the issue of class imbalance present in genomic datasets. Additionally, the runtime hierarchy is now firmly inverted compared to the original SAGA-based pipeline: ANOVA $<$ Variance Threshold $\ll$ Mutual Information, with MI roughly two orders of magnitude slower than the other two filters yet not consistently delivering the highest balanced performance.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.80\textwidth]{featurecountredution.png}
+  \caption{Feature Count Reduction on a Logarithmic Scale. Note the significant compression achieved by Filter (ANOVA) and Embedded (Random Forest) methods relative to the 60,660-feature baseline.}
+  \label{fig:feature_red}
+\end{figure}
+
+
+\subsection{Wrapper Methods}
+
+In our testing, the wrapper methods produced mixed results compared to the baseline and the filter-based selectors. Forward Selection was found to be both significantly slower to run and significantly less accurate than the baseline; even partial searches on BRCA at a few hundred features took several hours. SelectKBest, evaluated at a fixed feature fraction of $0.50$ (i.e.\ 30{,}330 retained features) and averaged across 10 random seeds, also produced mixed outcomes: it underperformed the all-features baseline on every dataset, with the largest gap on PRAD. We concluded that SelectKBest is workable for predicting BRCA and to a lesser extent COAD, but not competitive with simple filter methods on PRAD. Results for the wrapper trials are shown in Tables~\ref{tab:forward_metrics} and~\ref{tab:skb_metrics}.
+
+\begin{table}[htbp]
+\centering
+\caption{Performance Metrics for Forward Selection Method on BRCA Dataset.}
+\label{tab:forward_metrics}
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Fraction} & \textbf{Original Features} & \textbf{Selected Features} & \textbf{Accuracy} & \textbf{Macro F1}  \\ \midrule
+0.005 & 60,660            & 2            & 0.598784           & 0.472006             \\ \midrule
+0.010 & 60,660            & 5            & 0.565350           & 0.456179             \\ \midrule
+0.020 & 60,660            & 10           & 0.601824           & 0.493374             \\ \midrule
+0.050 & 60,660            & 25           & 0.650456           & 0.556571             \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Performance Metrics for the SelectKBest wrapper method across TCGA datasets. Values are means $\pm$ standard deviations over 10 random seeds at a fixed feature fraction of $0.50$ (30{,}330 selected features).}
+\label{tab:skb_metrics}
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+\textbf{Dataset} & \textbf{Method} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{ROC-AUC} & \textbf{Features} & \textbf{Runtime (s)} \\ \midrule
+BRCA & SelectKBest  & $0.8015 \pm 0.008$ & $0.6880 \pm 0.023$ & $0.8288 \pm 0.012$ & 30,330 & 22.99 \\ \midrule
+COAD & SelectKBest  & $0.7631 \pm 0.049$ & $0.5971 \pm 0.062$ & $0.7977 \pm 0.056$ & 30,330 & 6.20 \\ \midrule
+PRAD & SelectKBest  & $0.6690 \pm 0.031$ & $0.4194 \pm 0.030$ & $0.7154 \pm 0.029$ & 30,330 & 7.42 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Analysis of Wrapper Methods}
+Because of the size and dimensionality of the dataset, Forward Selection is not feasible without restricting the candidate pool to a very small subset of features. As illustrated in the Feature Count Reduction plot (Figure~\ref{fig:feature_red}), most effective methods must reduce the feature space by orders of magnitude to remain computationally viable. At the extremely small feature counts required for Forward Selection to terminate, the accuracy and the balance between precision and recall are poor.
+
+The SelectKBest wrapper, run with 10 different seeds at fraction $0.50$, gives a clearer picture of stability than the original single-seed report. On BRCA it achieves the highest mean accuracy of the three datasets ($0.8015 \pm 0.008$), but its Macro F1 ($0.6880$) trails ANOVA's $0.7715$ from Table~\ref{tab:filter_metrics} by a wide margin and exhibits noticeably higher variance on COAD ($\sigma_{\mathrm{Acc}} = 0.049$, $\sigma_{F1} = 0.062$). On PRAD, SelectKBest collapses to $0.6690 \pm 0.031$ accuracy and $0.4194 \pm 0.030$ Macro F1, well below the filter and embedded baselines. Together, these numbers indicate that retaining roughly half of the 60{,}660 genes via a univariate score is not sufficient to recover the predictive structure that the full-feature baseline captures, and that the method is particularly fragile under class imbalance.
+
+\subsection{Embedded Methods}
+
+In our testing, the embedded methods produced mixed results relative to the baseline. On BRCA, both LASSO and Random Forest achieved Macro F1 scores ($0.723$ and $0.729$, respectively) that are competitive with the full-feature baseline ($0.727$), demonstrating that embedded selection can approximately match the performance ceiling while dramatically reducing the feature space. However, on COAD and PRAD the embedded methods failed to surpass the baseline, and on PRAD all methods continued to struggle with minority subtype identification. Performance metrics for LASSO and Random Forest are detailed in Table~\ref{tab:embedded_metrics}. Random Forest results were averaged over 10 random seeds; LASSO results for BRCA were similarly averaged over 10 seeds, while COAD and PRAD LASSO remain single-seed runs.
+
+\begin{table}[htbp]
+\centering
+\caption{Performance Metrics for Embedded Feature Selection Methods (LASSO and Random Forest) across TCGA Datasets. Where 10-seed data is available, values are means $\pm$ standard deviations; single-seed results are shown without $\pm$.}
+\label{tab:embedded_metrics}
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Dataset} & \textbf{Method} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{ROC-AUC} & \textbf{Features} \\ \midrule
+\multirow{2}{*}{BRCA} & LASSO          & $0.8213 \pm 0.014$ & $0.7231 \pm 0.025$ & $0.9452 \pm 0.009$ & 42,230 \\
+                      & Random Forest  & $0.8237 \pm 0.013$ & $0.7289 \pm 0.022$ & $0.9474 \pm 0.008$ & 7,739  \\ \midrule
+\multirow{2}{*}{COAD} & LASSO          & $0.7681 \pm 0.015$ & $0.5627 \pm 0.020$ & $0.9701 \pm 0.016$ & 38,574 \\
+                      & Random Forest  & $0.8466 \pm 0.016$ & $0.5801 \pm 0.023$ & $0.9238 \pm 0.017$ & 3,023  \\ \midrule
+\multirow{2}{*}{PRAD} & LASSO          & $0.7612 \pm 0.015$ & $0.3717 \pm 0.022$ & $0.9077 \pm 0.009$ & 39,029 \\
+                      & Random Forest  & $0.8120 \pm 0.019$ & $0.4055 \pm 0.024$ & $0.9536 \pm 0.011$ & 4,393  \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Analysis of Embedded Methods}
+The multi-seed Random Forest results reveal a more nuanced picture than the original single-seed evaluation. On BRCA, Random Forest achieved a mean Macro F1 of $0.7289 \pm 0.022$, effectively matching the baseline's $0.7268$ while compressing the feature space from 60,660 to a mean of 7,739 genes. LASSO on BRCA similarly reached $0.7231 \pm 0.025$, though its selected feature count varied dramatically across seeds (ranging from $\sim$5,000 to $\sim$58,000), indicating instability in the L1 regularization path depending on the train--validation split. On COAD, Random Forest's mean accuracy ($0.8466$) exceeded the baseline ($0.8320$), but its Macro F1 ($0.5801$) fell short of both the baseline ($0.5825$) and the filter methods (ANOVA $0.5974$, MI $0.6234$), again revealing that higher accuracy does not guarantee better minority-class recovery. The PRAD dataset continued to pose the greatest challenge: despite Random Forest achieving $0.8120$ accuracy, its Macro F1 of $0.4055$ confirms that the model is predominantly predicting the majority subtype (PRAD.1-ERG) while failing on rare subtypes such as PRAD.3, 4, 6, and 7, which received zero precision and recall across all seeds. These results reinforce that the primary bottleneck on PRAD is class imbalance rather than feature selection, and that techniques such as cost-sensitive learning or synthetic over-sampling may be necessary to improve minority subtype recovery.
+
+
+\section{Discussion}
+
+The results of our benchmarking study reveal a counter-intuitive reality in high-dimensional genomic classification: more complex feature selection does not always yield better predictive performance. Our primary insight, which we refer to as the "Baseline Paradox," is that the baseline model (using all 60,660 features) often outperformed or closely matched sophisticated wrapper and embedded methods. We suspect this is because gene expression data contains highly distributed signals; by aggressively pruning the feature space to 2,000 or 5,000 genes, we may be discarding subtle but cumulative predictive information that the baseline model is able to leverage through regularization.
+
+Furthermore, our analysis of filter methods highlights a clear trade-off between statistical simplicity and clinical utility. While ANOVA and Variance Thresholding are computationally efficient, they are "blind" to the correlations between genes. In contrast, Mutual Information performed better on the COAD dataset because it captures non-linear relationships, though at a significant cost to runtime.
+
+The most significant takeaway regarding dataset characteristics is the impact of class imbalance. In the PRAD dataset, despite achieving high raw accuracy, the Macro F1-scores remained dismal across all methods. This indicates that the models were essentially learning to ignore minority subtypes to maximize overall accuracy. This suggests that for genomic datasets with rare subtypes, the choice of feature selector is secondary to the choice of sampling strategy or loss weighting.
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Limitations}
+
+While this study provides a broad evaluation of feature selection, several constraints must be noted:
+
+\begin{itemize}
+    \item Computational Search Space: Due to hardware limits, wrapper methods required a variance-based pre-filter to reduce features to 2,000. This restricted the search space, potentially omitting predictive gene interactions that were discarded during pre-filtering.
+    \item Dataset Bias: Our reliance on TCGA cohorts may introduce biases related to specific sequencing protocols and patient demographics. These results may not fully generalize to other clinical datasets or different sequencing platforms.
+    \item Methodological Scope: We utilized classical machine learning frameworks. Alternative architectures, such as deep autoencoders or graph neural networks, might interact differently with these feature selection paradigms.
+    \item Class Imbalance: The models struggled with minority subtypes in the PRAD dataset. Future work would require integrating techniques like cost-sensitive learning or synthetic over-sampling to improve precision for rare cancer classes.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+\section{Conclusion}
+
+In this work, we benchmarked filter, wrapper, and embedded feature selection techniques against a high-dimensional baseline for cancer subtype classification. Our findings indicate that while feature selection is essential for reducing computational overhead and identifying potentially biological markers, it can incur a performance penalty. Specifically, ANOVA and Mutual Information emerged as the most reliable selectors for BRCA and COAD, whereas all methods struggled with the high class imbalance present in the PRAD dataset.
+
+Future work should investigate the use of ensemble feature selection, where multiple selectors are chained together to stabilize the feature set. Additionally, incorporating interpretability tools like SHAP (Shapley Additive Explanations) could help move beyond simple classification to identify the specific biological pathways these models are utilizing. Ultimately, our study suggests that in the $p \gg n$ regime of genomics, maintaining a wider feature net often yields more robust results than aggressive reduction.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{ack}
+Use unnumbered first level headings for the acknowledgments. All acknowledgments
+go at the end of the paper before the list of references. Moreover, you are required to declare
+funding (financial activities supporting the submitted work) and competing interests (related financial activities outside the submitted work).
+More information about this disclosure can be found at: \url{https://neurips.cc/Conferences/2026/PaperInformation/FundingDisclosure}.
+
+
+Do {\bf not} include this section in the anonymized submission, only in the final paper. You can use the \texttt{ack} environment provided in the style file to automatically hide this section in the anonymized submission.
+\end{ack}
+
+
+
+
+
+
+
+
+
+\begin{thebibliography}{8}
+
+\bibitem{tcga_resource}
+National Cancer Institute (2026). \textit{The Cancer Genome Atlas (TCGA) Data Portal: Genomic Data Commons}. U.S. National Institutes of Health. Available at: \url{https://portal.gdc.cancer.gov/}.
+
+\bibitem{scikit-learn}
+Pedregosa, F., Varoquaux, G., et al. (2011). Scikit-learn: Machine learning in Python. \textit{Journal of Machine Learning Research}, 12, 2825-2830.
+
+\bibitem{lasso_foundational}
+Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. \textit{Journal of the Royal Statistical Society: Series B}, 58(1), 267-288.
+
+\bibitem{mutual_info}
+Kraskov, A., Stögbauer, H., \& Grassberger, P. (2004). Estimating mutual information. \textit{Physical Review E}, 69(6), 066138.
+
+\bibitem{hdlss_curse}
+Donoho, D. L. (2000). High-dimensional data analysis: The curses and blessings of dimensionality. \textit{AMS Conference on Math Challenges of the 21st Century}.
+
+\bibitem{rfe_wrapper}
+Guyon, I., Weston, J., Barnhill, S., \& Vapnik, V. (2002). Gene selection for cancer classification using support vector machines. \textit{Machine Learning}, 46, 389-422.
+
+\bibitem{saga_solver}
+Defazio, A., Bach, F., \& Lacoste-Julien, S. (2014). SAGA: A fast incremental gradient method with support for non-strongly convex composite objectives. \textit{Advances in Neural Information Processing Systems}, 27.
+
+\bibitem{genomic_benchmarking}
+Li, J., et al. (2021). A review of feature selection methods in bioinformatics genomic data. \textit{IEEE/ACM Transactions on Computational Biology and Bioinformatics}.
+
+\end{thebibliography}
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+\section{Software and Implementation}
+
+Our benchmarking pipeline was implemented in Python 3.9 using the Scikit-learn (v1.0.2) library for model training and feature selection. To manage the high-dimensional genomic matrices, we utilized NumPy and Pandas for efficient data manipulation. The TCGA datasets (BRCA, COAD, and PRAD) were processed using a modular script architecture where feature selectors (Filter, Wrapper, and Embedded) were treated as interchangeable components in a unified pipeline. 
+
+To reproduce our results, the primary execution script requires the input data directory and a configuration file specifying the cancer cohort and selection method. We have provided a \texttt{requirements.txt} file to ensure all dependencies, including the L-BFGS and SGD solvers, are correctly versioned. The experiments were executed on a machine with 64GB of RAM and an 16-core CPU;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\input{checklist.tex}
+
+
+\end{document}

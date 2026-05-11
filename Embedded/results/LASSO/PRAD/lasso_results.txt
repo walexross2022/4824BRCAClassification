@@ -1,0 +1,25 @@
+Standardized Report: LASSO on PRAD
+Features: 57043
+Training Time: 1.55s
+Accuracy: 0.7600
+Macro F1: 0.4091
+Weighted F1: 0.7406
+Macro Recall: 0.3932
+Weighted Recall: 0.7600
+ROC-AUC: 0.9271
+
+Classification Report:
+              precision    recall  f1-score   support
+
+  PRAD.1-ERG       0.88      0.91      0.89        46
+ PRAD.2-ETV1       0.57      0.50      0.53         8
+ PRAD.3-ETV4       1.00      0.25      0.40         4
+ PRAD.4-FLI1       0.00      0.00      0.00         1
+ PRAD.5-SPOP       0.78      0.64      0.70        11
+PRAD.6-FOXA1       0.00      0.00      0.00         3
+ PRAD.7-IDH1       0.00      0.00      0.00         1
+PRAD.8-other       0.67      0.85      0.75        26
+
+    accuracy                           0.76       100
+   macro avg       0.49      0.39      0.41       100
+weighted avg       0.75      0.76      0.74       100

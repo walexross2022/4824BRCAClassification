@@ -115,6 +115,46 @@ def load_dataset(cancer_type="BRCA"):
 
 
 # -----------------------------
+# Cached Dataset Loader (parquet)
+# -----------------------------
+CACHE_DIR = os.path.join(DATA_DIR, "_cache")
+
+
+def _cache_paths(cancer_type):
+    cancer_type = cancer_type.upper()
+    return (
+        os.path.join(CACHE_DIR, f"{cancer_type}_X.parquet"),
+        os.path.join(CACHE_DIR, f"{cancer_type}_y.parquet"),
+    )
+
+
+def load_dataset_cached(cancer_type="BRCA", force_rebuild=False, verbose=False):
+    """
+    Load dataset using a parquet cache to avoid re-parsing 60660-col CSVs.
+
+    On first call, builds the cache by invoking load_dataset(). Subsequent
+    calls deserialize parquet files (10-30x faster).
+    """
+    cancer_type = cancer_type.upper()
+    x_path, y_path = _cache_paths(cancer_type)
+
+    if not force_rebuild and os.path.exists(x_path) and os.path.exists(y_path):
+        if verbose:
+            print(f"[{cancer_type}] Loading cached parquet...")
+        X = pd.read_parquet(x_path)
+        y_df = pd.read_parquet(y_path)
+        y = y_df.iloc[:, 0]
+        y.name = y_df.columns[0]
+        return X, y
+
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    X, y = load_dataset(cancer_type)
+    X.to_parquet(x_path)
+    y.to_frame().to_parquet(y_path)
+    return X, y
+
+
+# -----------------------------
 # Optional local test
 # -----------------------------
 if __name__ == "__main__":

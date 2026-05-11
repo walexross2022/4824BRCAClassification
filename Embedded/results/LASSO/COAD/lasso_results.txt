@@ -1,0 +1,21 @@
+Standardized Report: LASSO on COAD
+Features: 55590
+Training Time: 5.54s
+Accuracy: 0.7767
+Macro F1: 0.5326
+Weighted F1: 0.7825
+Macro Recall: 0.5587
+Weighted Recall: 0.7767
+ROC-AUC: 0.9060
+
+Classification Report:
+              precision    recall  f1-score   support
+
+      GI.CIN       0.93      0.82      0.88        68
+       GI.GS       0.54      0.47      0.50        15
+   GI.HM-SNV       0.00      0.00      0.00         2
+      GI.MSI       0.63      0.94      0.76        18
+
+    accuracy                           0.78       103
+   macro avg       0.53      0.56      0.53       103
+weighted avg       0.80      0.78      0.78       103

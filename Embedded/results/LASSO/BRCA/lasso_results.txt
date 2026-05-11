@@ -1,0 +1,22 @@
+Standardized Report: LASSO on BRCA
+Features: 57863
+Training Time: 2.36s
+Accuracy: 0.7994
+Macro F1: 0.6809
+Weighted F1: 0.7902
+Macro Recall: 0.6788
+Weighted Recall: 0.7994
+ROC-AUC: 0.9359
+
+Classification Report:
+              precision    recall  f1-score   support
+
+  BRCA.Basal       0.95      0.95      0.95        56
+   BRCA.Her2       0.69      0.75      0.72        24
+   BRCA.LumA       0.83      0.89      0.86       167
+   BRCA.LumB       0.73      0.66      0.69        62
+ BRCA.Normal       0.25      0.15      0.19        20
+
+    accuracy                           0.80       329
+   macro avg       0.69      0.68      0.68       329
+weighted avg       0.78      0.80      0.79       329
