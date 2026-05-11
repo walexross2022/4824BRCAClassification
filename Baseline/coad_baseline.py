@@ -3,6 +3,7 @@ warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
+import time
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -55,6 +56,8 @@ for run in range(N_RUNS):
     seed = np.random.randint(0, 2**31 - 1)
     print(f"\n[{CANCER}] Run {run+1}/{N_RUNS} (seed={seed})")
 
+    run_start = time.time()
+
     # 4. Train / test split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, stratify=y, random_state=seed
@@ -67,7 +70,9 @@ for run in range(N_RUNS):
 
     # 6. Train Logistic Regression
     model = LogisticRegression(max_iter=1000, random_state=seed)
+    train_start = time.time()
     model.fit(X_train_scaled, y_train)
+    train_time = time.time() - train_start
 
     # 7. Evaluate
     y_pred = model.predict(X_test_scaled)
@@ -87,7 +92,9 @@ for run in range(N_RUNS):
         y_test_bin = label_binarize(y_test, classes=labels)
         roc_auc = roc_auc_score(y_test_bin, y_prob, multi_class="ovr", average="weighted")
 
-    print(f"    Accuracy:    {acc:.4f} | Macro F1: {f1_macro:.4f} | W F1: {f1_weighted:.4f} | Macro Rec: {rec_macro:.4f} | W Rec: {rec_weighted:.4f} | ROC-AUC: {roc_auc:.4f}")
+    run_time = time.time() - run_start
+
+    print(f"    Accuracy:    {acc:.4f} | Macro F1: {f1_macro:.4f} | W F1: {f1_weighted:.4f} | Macro Rec: {rec_macro:.4f} | W Rec: {rec_weighted:.4f} | ROC-AUC: {roc_auc:.4f} | Train: {train_time:.2f}s | Run: {run_time:.2f}s")
 
     cm = confusion_matrix(y_test, y_pred)
     if sum_cm is None:
@@ -104,6 +111,8 @@ for run in range(N_RUNS):
         "macro_recall": rec_macro,
         "weighted_recall": rec_weighted,
         "roc_auc": roc_auc,
+        "train_time_s": train_time,
+        "run_time_s": run_time,
     })
 
 results_df = pd.DataFrame(all_records)
@@ -173,10 +182,12 @@ with open(f"{OUT_DIR}/{CANCER}_summary.txt", "w") as f:
     f.write(f"{'Metric':<20} {'Mean':>10} {'Std':>10} {'Min':>10} {'Max':>10}\n")
     f.write("-" * 60 + "\n")
     for col, label in zip(
-        ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall", "roc_auc"],
-        ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall", "ROC-AUC"],
+        ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall", "roc_auc", "train_time_s", "run_time_s"],
+        ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall", "ROC-AUC", "Train Time (s)", "Run Time (s)"],
     ):
         f.write(f"{label:<20} {results_df[col].mean():>10.4f} {results_df[col].std():>10.4f} {results_df[col].min():>10.4f} {results_df[col].max():>10.4f}\n")
+    f.write(f"\nTotal train time (s): {results_df['train_time_s'].sum():.2f}\n")
+    f.write(f"Total run time (s):   {results_df['run_time_s'].sum():.2f}\n")
     f.write(f"\nPer-run details:\n")
     f.write(results_df.to_string(index=False))
 
