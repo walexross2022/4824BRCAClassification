@@ -1,45 +1,38 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import os
 
 # Create results directory for plots
 output_dir = "4824BRCAClassification/Embedded/results/Comparison"
 os.makedirs(output_dir, exist_ok=True)
 
-# 1. Data Collection (Hardcoded based on confirmed results)
 datasets = ['BRCA', 'COAD', 'PRAD']
 methods = ['Baseline', 'ANOVA (Filter)', 'SelectKBest (Wrapper)', 'LASSO (Embedded)', 'Random Forest (Embedded)']
 
-# Metrics (Accuracy)
-# Baseline: BRCA: 0.82, COAD: 0.85, PRAD: 0.74 (Means from CSVs)
-# ANOVA: BRCA: 0.81 (COAD/PRAD extrapolated or from partial results if available, assuming competitive)
-# SelectKBest: BRCA: 0.82 (best fraction)
-# LASSO: BRCA: 0.77, COAD: 0.77, PRAD: 0.76
-# RF: BRCA: 0.81, COAD: 0.87, PRAD: 0.76
-
+# Accuracy Data from Tables 4, 6, and 7
+# Baseline values are from the "Results" text section in your draft
 accuracy_data = {
-    'Baseline': [0.82, 0.85, 0.74],
-    'ANOVA (Filter)': [0.81, 0.83, 0.72], # Extrapolated for COAD/PRAD
-    'SelectKBest (Wrapper)': [0.82, 0.84, 0.73], # Extrapolated
-    'LASSO (Embedded)': [0.77, 0.77, 0.76],
-    'Random Forest (Embedded)': [0.81, 0.87, 0.76]
+    'Baseline': [0.8412, 0.8544, 0.7920],
+    'ANOVA (Filter)': [0.8328, 0.8447, 0.7800],
+    'SelectKBest (Wrapper)': [0.8085, 0.8155, 0.6100],
+    'LASSO (Embedded)': [0.7671, 0.7681, 0.7612],
+    'Random Forest (Embedded)': [0.8128, 0.8696, 0.7612]
 }
 
-# Metrics (Macro F1)
+# Macro F1 Data from Tables 4, 6, and 7
 f1_data = {
-    'Baseline': [0.73, 0.60, 0.38],
-    'ANOVA (Filter)': [0.73, 0.58, 0.35],
-    'SelectKBest (Wrapper)': [0.77, 0.60, 0.36],
-    'LASSO (Embedded)': [0.68, 0.56, 0.37],
-    'Random Forest (Embedded)': [0.63, 0.60, 0.30]
+    'Baseline': [0.7820, 0.7122, 0.4215],
+    'ANOVA (Filter)': [0.7745, 0.6058, 0.3719],
+    'SelectKBest (Wrapper)': [0.7151, 0.6915, 0.3728],
+    'LASSO (Embedded)': [0.6779, 0.5627, 0.3717],
+    'Random Forest (Embedded)': [0.6303, 0.5979, 0.2982]
 }
 
-# Features Selected (Log Scale useful here)
+# Feature Counts from Tables 4, 6, and 7
 feature_counts = {
     'Baseline': [60660, 60660, 60660],
     'ANOVA (Filter)': [5000, 5000, 5000],
-    'SelectKBest (Wrapper)': [15165, 15165, 15165],
+    'SelectKBest (Wrapper)': [30330, 30330, 30330],
     'LASSO (Embedded)': [44708, 38574, 39029],
     'Random Forest (Embedded)': [7894, 1742, 2345]
 }
@@ -53,14 +46,13 @@ def create_grouped_bar(data, title, ylabel, filename, ylim=None):
 
     for attribute, measurement in data.items():
         offset = width * multiplier
-        rects = ax.bar(x + offset, measurement, width, label=attribute)
-        # ax.bar_label(rects, padding=3, fmt='%.2f')
+        ax.bar(x + offset, measurement, width, label=attribute)
         multiplier += 1
 
     ax.set_title(title, fontsize=14, fontweight='bold')
     ax.set_ylabel(ylabel, fontsize=12)
     ax.set_xticks(x + width * (len(methods)-1) / 2, datasets)
-    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1))
     if ylim:
         ax.set_ylim(ylim)
     
@@ -89,10 +81,9 @@ ax.set_yscale('log')
 ax.set_title('Feature Count Reduction (Log Scale)', fontsize=14, fontweight='bold')
 ax.set_ylabel('Number of Selected Features', fontsize=12)
 ax.set_xticks(x + width * (len(methods)-1) / 2, datasets)
-ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1))
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.savefig(os.path.join(output_dir, 'feature_reduction.png'), dpi=300)
 plt.close()
 
 print(f"Plots saved to {output_dir}")
-
