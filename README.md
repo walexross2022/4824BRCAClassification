@@ -35,35 +35,35 @@ Each dataset includes:
 Gene expression matrix
 Cancer subtype labels
 Patient/sample alignment preprocessing
-Project Structure
-4824BRCAClassification/
-│
-├── Baseline/
-│   ├── baseline.py
-│   └── results/
-│
-├── Filter/
-│   ├── app.py
-│   ├── variance_filter.py
-│   ├── anova_filter.py
-│   ├── mutual_information_filter.py
-│   ├── run_filters.py
-│   └── results/
-│
-├── Embedded/
-│   ├── lasso_feature_selection.py
-│   ├── generate_comparison_plots.py
-│   └── results/
-│
-├── Wrapper/
-│   └── (under development)
-│
-├── data/
-│   ├── TCGA-BRCA/
-│   ├── TCGA-COAD/
-│   └── TCGA-PRAD/
-│
-└── README.md
+
+# Project Structure
+
+- `Baseline/`
+  - Baseline machine learning models
+  - Contains baseline training scripts and evaluation results
+
+- `Filter/`
+  - Statistical feature selection methods
+  - Includes:
+    - Variance Threshold
+    - ANOVA / F-test
+    - Mutual Information
+
+- `Embedded/`
+  - Embedded feature selection methods
+  - Includes LASSO logistic regression experiments
+
+- `Wrapper/`
+  - Planned wrapper-based feature selection methods
+  - RFE and sequential selection experiments
+
+- `data/`
+  - TCGA gene expression datasets and subtype labels
+
+- `results/`
+  - Generated plots, CSV summaries, and experiment outputs
+
+
 Methodology
 1. Baseline Models
 
