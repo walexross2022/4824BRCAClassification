@@ -14,8 +14,8 @@ OUT_DIR = os.path.join(BASE_DIR, "Baseline", "results")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 CANCERS = ["BRCA", "COAD", "PRAD"]
-METRICS = ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall"]
-METRIC_LABELS = ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall"]
+METRICS = ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall", "roc_auc"]
+METRIC_LABELS = ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall", "ROC-AUC"]
 
 # ---- Load all run results ----
 all_data = {}
@@ -81,8 +81,8 @@ for idx, (metric, label) in enumerate(zip(METRICS, METRIC_LABELS)):
     ax.set_ylim(0, 1.2)
     ax.grid(axis="y", alpha=0.3)
 
-# Remove unused subplot
-axes_flat[-1].axis("off")
+for k in range(len(METRICS), len(axes_flat)):
+    axes_flat[k].axis("off")
 
 fig.suptitle("Per-Metric Comparison Across Cancers (10 runs each)", fontsize=15, fontweight="bold", y=1.02)
 plt.tight_layout()

@@ -9,9 +9,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score, recall_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, f1_score, recall_score, classification_report, confusion_matrix, roc_auc_score
 
 # Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,6 +44,8 @@ y = sub.set_index("sample_id").loc[common, "Subtype_Selected"]
 
 print(f"  Class distribution:\n{y.value_counts()}")
 
+labels = sorted(y.unique())
+
 all_records = []
 sum_cm = None
 
@@ -63,6 +65,9 @@ for run in range(N_RUNS):
     model.fit(X_train_scaled, y_train)
 
     y_pred = model.predict(X_test_scaled)
+    y_prob = model.predict_proba(X_test_scaled)
+    y_prob = np.nan_to_num(y_prob, nan=0.0, posinf=1.0, neginf=0.0)
+    y_prob = y_prob / y_prob.sum(axis=1, keepdims=True)
 
     acc = accuracy_score(y_test, y_pred)
     f1_macro = f1_score(y_test, y_pred, average="macro")
@@ -70,7 +75,13 @@ for run in range(N_RUNS):
     rec_macro = recall_score(y_test, y_pred, average="macro")
     rec_weighted = recall_score(y_test, y_pred, average="weighted")
 
-    print(f"    Accuracy:    {acc:.4f} | Macro F1: {f1_macro:.4f} | W F1: {f1_weighted:.4f} | Macro Rec: {rec_macro:.4f} | W Rec: {rec_weighted:.4f}")
+    if len(labels) == 2:
+        roc_auc = roc_auc_score(y_test, y_prob[:, 1])
+    else:
+        y_test_bin = label_binarize(y_test, classes=labels)
+        roc_auc = roc_auc_score(y_test_bin, y_prob, multi_class="ovr", average="weighted")
+
+    print(f"    Accuracy:    {acc:.4f} | Macro F1: {f1_macro:.4f} | W F1: {f1_weighted:.4f} | Macro Rec: {rec_macro:.4f} | W Rec: {rec_weighted:.4f} | ROC-AUC: {roc_auc:.4f}")
 
     cm = confusion_matrix(y_test, y_pred)
     if sum_cm is None:
@@ -86,6 +97,7 @@ for run in range(N_RUNS):
         "weighted_f1": f1_weighted,
         "macro_recall": rec_macro,
         "weighted_recall": rec_weighted,
+        "roc_auc": roc_auc,
     })
 
 results_df = pd.DataFrame(all_records)
@@ -95,15 +107,15 @@ print(f"\n[{CANCER}] Summary over {N_RUNS} runs:")
 print(results_df.describe())
 
 # ---- Aggregated bar chart ----
-plt.figure(figsize=(10, 6))
-metrics_agg = ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall"]
+plt.figure(figsize=(12, 6))
+metrics_agg = ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall", "ROC-AUC"]
 means = [results_df["accuracy"].mean(), results_df["macro_f1"].mean(),
          results_df["weighted_f1"].mean(), results_df["macro_recall"].mean(),
-         results_df["weighted_recall"].mean()]
+         results_df["weighted_recall"].mean(), results_df["roc_auc"].mean()]
 stds  = [results_df["accuracy"].std(),  results_df["macro_f1"].std(),
          results_df["weighted_f1"].std(), results_df["macro_recall"].std(),
-         results_df["weighted_recall"].std()]
-colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974"]
+         results_df["weighted_recall"].std(), results_df["roc_auc"].std()]
+colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"]
 xpos = np.arange(len(metrics_agg))
 bars = plt.bar(xpos, means, yerr=stds, capsize=5, color=colors, edgecolor="black", linewidth=1.2)
 for i, (mean, std) in enumerate(zip(means, stds)):
@@ -134,7 +146,7 @@ print(f"  Saved aggregated confusion matrix plot.")
 # ---- Per-run line plot ----
 plt.figure(figsize=(12, 6))
 for col, label, color in zip(
-    ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall"],
+    ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall", "roc_auc"],
     metrics_agg, colors,
 ):
     plt.plot(results_df["run"], results_df[col], marker="o", label=label, color=color)
@@ -156,8 +168,8 @@ with open(f"{OUT_DIR}/{CANCER}_summary.txt", "w") as f:
     f.write(f"{'Metric':<20} {'Mean':>10} {'Std':>10} {'Min':>10} {'Max':>10}\n")
     f.write("-" * 60 + "\n")
     for col, label in zip(
-        ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall"],
-        ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall"],
+        ["accuracy", "macro_f1", "weighted_f1", "macro_recall", "weighted_recall", "roc_auc"],
+        ["Accuracy", "Macro F1", "Weighted F1", "Macro Recall", "Weighted Recall", "ROC-AUC"],
     ):
         f.write(f"{label:<20} {results_df[col].mean():>10.4f} {results_df[col].std():>10.4f} {results_df[col].min():>10.4f} {results_df[col].max():>10.4f}\n")
     f.write(f"\nPer-run details:\n")
