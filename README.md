@@ -1,46 +1,56 @@
-README
-TCGA Cancer Subtype Classification Using Machine Learning
+# TCGA Cancer Subtype Classification Using Machine Learning
 
-This project investigates the use of Machine Learning methods for multiclass cancer subtype classification using high-dimensional gene expression data from The Cancer Genome Atlas (TCGA). The goal is to compare baseline, filter-based, embedded, and wrapper-style feature selection approaches for reducing dimensionality while maintaining strong subtype classification performance.
+This project investigates the use of Machine Learning methods for multiclass cancer subtype classification using high-dimensional gene expression data from The Cancer Genome Atlas (TCGA). The primary goal is to compare baseline, filter-based, wrapper-based, and embedded feature selection approaches for reducing dimensionality while maintaining strong subtype classification performance.
 
 The project evaluates multiple machine learning pipelines across three TCGA cancer datasets:
 
-BRCA — Breast Invasive Carcinoma
-COAD — Colon Adenocarcinoma
-PRAD — Prostate Adenocarcinoma
+- BRCA — Breast Invasive Carcinoma
+- COAD — Colon Adenocarcinoma
+- PRAD — Prostate Adenocarcinoma
 
-The datasets contain approximately 60,660 gene expression features per sample, making dimensionality reduction and feature selection critical components of the workflow.
+Each dataset contains approximately 60,660 gene expression features per sample, making dimensionality reduction and feature selection essential components of the workflow.
 
-Project Goals
+---
+
+# Project Goals
 
 The primary objectives of this project are:
 
-Perform multiclass cancer subtype classification using gene expression data
-Compare different feature selection strategies
-Evaluate dimensionality reduction effectiveness
-Analyze tradeoffs between runtime, interpretability, and predictive performance
-Investigate how aggressive feature reduction affects classification quality
-Datasets
+- Perform multiclass cancer subtype classification using gene expression data
+- Compare Filter, Wrapper, and Embedded feature selection strategies
+- Evaluate dimensionality reduction effectiveness
+- Analyze tradeoffs between runtime, interpretability, and predictive performance
+- Investigate how aggressive feature reduction affects classification quality in imbalanced datasets
+- Compare reduced-feature models against a full-feature baseline classifier
+
+---
+
+# Datasets
 
 The project uses TCGA gene expression matrices and associated subtype labels.
 
-Included Cancer Types
-Dataset	Description
-BRCA	Breast cancer molecular subtypes
-COAD	Colon cancer molecular subtypes
-PRAD	Prostate cancer subtypes
+## Included Cancer Types
+
+| Dataset | Samples | Subtypes | Notes |
+|---|---|---|---|
+| BRCA | ~1,231 | 5 | Breast cancer molecular subtypes |
+| COAD | ~524 | 4 | Colon cancer subtype classification |
+| PRAD | ~554 | 8 | High class imbalance and minority subtype difficulty |
 
 Each dataset includes:
 
-Gene expression matrix
-Cancer subtype labels
-Patient/sample alignment preprocessing
+- Gene expression matrix
+- Patient subtype labels
+- Sample alignment preprocessing
+- Duplicate patient handling
+
+---
 
 # Project Structure
 
 - `Baseline/`
-  - Baseline machine learning models
-  - Contains baseline training scripts and evaluation results
+  - Baseline Logistic Regression experiments using the complete feature set
+  - Includes multicancer comparison plots and baseline metrics
 
 - `Filter/`
   - Statistical feature selection methods
@@ -48,175 +58,300 @@ Patient/sample alignment preprocessing
     - Variance Threshold
     - ANOVA / F-test
     - Mutual Information
+  - Contains preprocessing loader (`app.py`) and automated benchmark scripts
 
 - `Embedded/`
-  - Embedded feature selection methods
-  - Includes LASSO logistic regression experiments
+  - Model-integrated feature selection methods
+  - Includes:
+    - LASSO Logistic Regression
+    - Random Forest Feature Importance
 
 - `Wrapper/`
-  - Planned wrapper-based feature selection methods
-  - RFE and sequential selection experiments
+  - Search-based feature selection approaches
+  - Includes:
+    - SelectKBest
+    - Forward Selection with variance pre-filtering
 
 - `data/`
-  - TCGA gene expression datasets and subtype labels
+  - Local directory containing TCGA expression matrices and subtype labels
 
 - `results/`
-  - Generated plots, CSV summaries, and experiment outputs
+  - Generated CSV summaries
+  - Benchmark plots
+  - Comparison visualizations
+  - ROC-AUC analyses
 
+---
 
-Methodology
-1. Baseline Models
+# Environment Setup
 
-Baseline models train directly on the full gene expression matrix with minimal feature reduction. These experiments establish reference performance metrics for comparison against feature selection approaches.
+This project was developed using:
 
-Metrics evaluated include:
+- Python 3.9+
+- Windows 11
+- scikit-learn
+- pandas
+- numpy
+- matplotlib
 
-Accuracy
-Macro F1 Score
-Weighted F1 Score
-ROC-AUC
-2. Filter Methods
+Install required dependencies:
 
-Filter methods evaluate features independently of the classifier and provide fast, interpretable dimensionality reduction.
+```bash
+pip install pandas numpy scikit-learn matplotlib
+```
 
-Implemented Filter Methods
-Variance Threshold
+---
 
-Removes genes with very low variance across samples.
+# Data Placement
 
-Threshold sweep tested:
+Place all TCGA `.csv` or `.parquet` files inside the `data/` directory using the following structure:
 
-0.05, 0.10, 0.25, 0.50, 0.75
+```text
+data/
+├── TCGA-BRCA/
+├── TCGA-COAD/
+└── TCGA-PRAD/
+```
 
-This method serves as a lightweight runtime-efficient baseline.
+Each dataset directory should contain:
 
-ANOVA / F-Test
+- Expression matrix
+- Subtype label file
 
-Ranks genes using ANOVA F-statistics and selects the top K features.
+---
 
-Mutual Information
+# How to Reproduce Results
 
-Ranks genes using mutual information scores to capture nonlinear relationships between genes and cancer subtypes.
+To reproduce the experiments and figures used in the final report, run the following scripts.
 
-3. Embedded Methods
+## 1. Run Baseline Experiments
+
+```bash
+python Baseline/baseline_run.py
+```
+
+This generates:
+
+- Baseline Logistic Regression metrics
+- Cross-cancer comparison plots
+- ROC-AUC summaries
+
+---
+
+## 2. Run Filter Method Benchmarks
+
+```bash
+python Filter/run_filters.py
+```
+
+This evaluates:
+
+- Variance Threshold sweeps
+- ANOVA / F-test selection
+- Mutual Information selection
+
+Outputs include:
+
+- Accuracy
+- Macro F1
+- ROC-AUC
+- Runtime
+- Feature count comparisons
+
+---
+
+## 3. Run Wrapper Methods
+
+```bash
+python Wrapper/select_k_best.py
+```
+
+Wrapper methods include:
+
+- SelectKBest
+- Forward Selection
+
+Forward Selection experiments use aggressive pre-filtering due to the computational cost of operating on 60,660-dimensional datasets.
+
+---
+
+## 4. Run Embedded Methods
+
+```bash
+python Embedded/lasso_experiments.py
+```
+
+Embedded experiments include:
+
+- LASSO Logistic Regression
+- Random Forest Feature Importance
+
+---
+
+## 5. Generate Comparison Visualizations
+
+```bash
+python results/generate_comparison_plots.py
+```
+
+This generates:
+
+- Accuracy comparison plots
+- Macro F1 comparison plots
+- ROC-AUC comparison plots
+- Feature reduction visualizations
+
+---
+
+# Methodology
+
+## 1. Baseline Models
+
+Baseline experiments were performed using the full feature set (`p = 60,660`) with Logistic Regression using the SAGA solver. These models establish a reference performance ceiling for comparison against reduced-feature methods.
+
+---
+
+## 2. Filter Methods
+
+Filter methods evaluate features independently of the classifier.
+
+### Implemented Methods
+
+- Variance Threshold
+  - Threshold sweep from `0.05` to `0.75`
+
+- ANOVA / F-test
+  - Selects statistically significant genes
+
+- Mutual Information
+  - Captures nonlinear relationships between genes and cancer subtypes
+
+Filter methods provide the best balance between computational efficiency and predictive performance.
+
+---
+
+## 3. Wrapper Methods
+
+Wrapper methods iteratively search for feature subsets using model feedback.
+
+### Implemented Methods
+
+- SelectKBest
+- Forward Selection
+
+Due to the extremely high dimensionality of TCGA datasets, wrapper methods require heavy pre-filtering and remain computationally expensive.
+
+---
+
+## 4. Embedded Methods
 
 Embedded methods perform feature selection during model training.
 
-Implemented Embedded Methods
-LASSO Logistic Regression
+### Implemented Methods
 
-Uses L1 regularization to encourage sparse feature selection and automatically remove less important genes.
+- LASSO Logistic Regression (L1 Regularization)
+- Random Forest Feature Importance
 
-The project evaluates:
+These methods attempt to automatically identify informative genes while optimizing classifier performance.
 
-Number of selected genes
-Classification performance
-Runtime tradeoffs
-Feature reduction effectiveness
-4. Wrapper Methods
+---
 
-Wrapper-based methods are planned for future implementation.
-
-Potential methods include:
-
-Recursive Feature Elimination (RFE)
-Forward Selection
-Backward Elimination
-
-Due to the extremely high dimensionality of TCGA datasets, wrapper methods are expected to be computationally expensive.
-
-Preprocessing Pipeline
-
-The preprocessing workflow includes:
-
-Loading expression matrices
-Loading subtype labels
-Standardizing TCGA sample IDs
-Removing duplicate patient samples
-Aligning labels with expression data
-Train/test splitting
-Feature scaling using StandardScaler
-
-All preprocessing is centralized through:
-
-Filter/app.py
-
-to ensure consistent dataset handling across experiments.
-
-Evaluation Metrics
+# Evaluation Metrics
 
 The following metrics are used throughout the project:
 
-Metric	Purpose
-Accuracy	Overall classification correctness
-Macro F1	Performance across all classes equally
-Weighted F1	Class-frequency weighted performance
-ROC-AUC	Multiclass discrimination capability
-Runtime	Computational efficiency
+| Metric | Purpose |
+|---|---|
+| Accuracy | Overall classification correctness |
+| Macro F1 | Balanced performance across all classes |
+| Weighted F1 | Frequency-weighted classification performance |
+| ROC-AUC | Multiclass discrimination capability |
+| Runtime | Computational efficiency |
 
-Macro F1 is particularly important due to class imbalance in several TCGA subtype datasets.
+Macro F1 is particularly important for PRAD due to severe subtype imbalance.
 
-Technologies Used
-Programming Languages
-Python 3
-Core Libraries
-pandas
-numpy
-scikit-learn
-matplotlib
-Machine Learning Models
-Logistic Regression
-SGDClassifier
-Runtime Considerations
+---
 
-The TCGA datasets contain approximately:
+# Key Findings
 
-~60,660 gene features
+## Baseline Paradox
 
-making computational efficiency an important challenge.
+The full-feature baseline frequently establishes a performance ceiling that aggressive feature selection methods struggle to surpass.
 
-Key observations:
+---
 
-Low variance thresholds retain many genes and significantly increase runtime
-Moderate feature reduction often improves both runtime and predictive performance
-Embedded and wrapper methods are substantially more computationally expensive than filter methods
-Example Workflow
-Run Variance Threshold Experiments
-python variance_filter.py
-Run All Filter Methods
-python run_filters.py
-Generate Embedded Comparison Plots
-python generate_comparison_plots.py
-Results
+## Dimensionality Reduction Efficiency
 
-The project compares:
+Filter methods such as ANOVA and Mutual Information achieve:
 
-predictive accuracy
-macro F1 performance
-runtime efficiency
-dimensionality reduction strength
+- 90%+ feature reduction
+- competitive ROC-AUC
+- strong classification accuracy
 
-across multiple feature selection strategies and cancer datasets.
+while remaining computationally manageable.
 
-Generated outputs include:
+---
 
-CSV result tables
-comparison plots
-feature reduction visualizations
-ROC-AUC summaries
+## Runtime Tradeoffs
 
-All generated outputs are saved to the corresponding results/ directories.
+- Variance Threshold is extremely fast but often retains many features
+- Mutual Information produces strong results but incurs heavy runtime costs
+- Wrapper methods become computationally infeasible without aggressive pre-filtering
 
-Future Work
+---
+
+## Class Imbalance Challenges
+
+PRAD consistently remains the most difficult dataset.
+
+Although many methods achieve relatively high Accuracy, Macro F1 scores remain low because classifiers frequently fail to identify rare cancer subtypes.
+
+This highlights the importance of evaluating:
+
+- Macro F1
+- ROC-AUC
+- minority subtype performance
+
+rather than relying solely on overall Accuracy.
+
+---
+
+# Example Results
+
+## Baseline Multi-Cancer Comparison
+
+The project includes aggregated comparison plots across BRCA, COAD, and PRAD datasets using repeated baseline Logistic Regression experiments.
+
+### Aggregated Metric Comparison
+
+![Aggregated Comparison](Baseline/results/Comparison/cross_cancer_aggregated_comparison.png)
+
+### Per-Metric Cancer Comparison
+
+![Per-Metric Comparison](Baseline/results/Comparison/cross_cancer_per_metric_comparison.png)
+
+---
+
+# Future Work
 
 Potential future improvements include:
 
-Wrapper feature selection methods
-Hyperparameter optimization
-Cross-validation experiments
-Deep learning models
-PCA and nonlinear dimensionality reduction
-Precision-Recall analysis
-Biological pathway interpretation of selected genes
-Authors
+- Recursive Feature Elimination (RFE)
+- Hyperparameter optimization
+- Cross-validation studies
+- Precision-Recall analysis
+- PCA and nonlinear dimensionality reduction
+- Deep learning architectures
+- Biological pathway interpretation of selected genes
 
+---
+
+# Authors
+
+- William Alex Ross
+- Qianhe (Ted) Sha
+- Bryan Pham
+- Yassin Lahrime
+
+Virginia Tech Machine Learning Project  
+TCGA Cancer Subtype Classification using Machine Learning and Feature Selection Techniques
